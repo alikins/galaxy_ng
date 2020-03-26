@@ -1,5 +1,5 @@
 import os
-
+from django.conf import settings
 
 DATABASES = {
     'default': {
@@ -11,3 +11,5 @@ DATABASES = {
         'PASSWORD': os.environ.get('PULP_DB_PASSWORD', ''),
     }
 }
+
+settings.INSTALLED_APPS.append('django_extensions')

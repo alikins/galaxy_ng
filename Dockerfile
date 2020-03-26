@@ -5,14 +5,20 @@ ENV LANG=en_US.UTF-8 \
     PULP_SETTINGS=/etc/pulp/settings.py \
     DJANGO_SETTINGS_MODULE=pulpcore.app.settings
 
+
+
 # Install dependencies
-RUN dnf -y install \
+RUN dnf -y install dnf-plugins-core \
+    && dnf config-manager --set-enabled PowerTools \
+    && dnf -y install \
         glibc-langpack-en \
         gcc \
         python3 \
         python3-devel \
         libpq \
         libpq-devel \
+        graphviz \
+        graphviz-devel \
     && dnf -y clean all
 
 COPY . /app

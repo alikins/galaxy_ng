@@ -14,9 +14,10 @@ galaxy_pulp_requirements = [
 requirements = galaxy_pulp_requirements + [
     "pulpcore>=3.1.1",
     "pulp-ansible>=0.2.0b8",
-    "django-prometheus>=2.0.0"
+    "django-prometheus>=2.0.0",
+    "django-extensions>=2.2.8",
+    "pygraphviz>=1.5",
 ]
-
 
 
 setup(
