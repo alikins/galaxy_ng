@@ -163,3 +163,10 @@ You can then spin up your development environment
 ```console
 $ vagrant up pulp3-source-fedora31
 ```
+
+## Generate er-ish diagrams
+
+```
+# generate model relation diagram in galaxy_ng.svg
+$ ./compose run --rm api manage graph_models -a -g -t django2018 > galaxy_ng.dot
+$ dot -x -Tsvg -ogalaxy_ng.svg  galaxy_ng.dot
