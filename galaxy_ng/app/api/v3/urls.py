@@ -3,7 +3,7 @@
 from django.urls import path
 
 from . import viewsets
-
+from . import synclists
 
 app_name = "v3"
 urlpatterns = [
@@ -41,5 +41,18 @@ urlpatterns = [
         'artifacts/collections/<str:filename>',
         viewsets.CollectionArtifactDownloadView.as_view(),
         name='collection-artifact-download'
+    ),
+    path(
+        'synclists/',
+        synclists.SyncListViewSet.as_view({'get': 'list', 'post': 'create'}),
+        name='synclist-list'
+    ),
+    path(
+        'synclists/<str:pk>/',
+        synclists.SyncListViewSet.as_view({'get': 'retrieve',
+                                           'put': 'update',
+                                           'patch': 'partial_update',
+                                           'delete': 'destroy'}),
+        name='synclist-detail'
     ),
 ]
