@@ -10,8 +10,8 @@ from . import namespace as namespace_models
 
 class SyncList(models.Model):
     POLICY_CHOICES = [
-        ("blacklisted", "blacklisted"),
-        ("whitelisted", "whitelisted"),
+        ("blacklist", "blacklist"),
+        ("whitelist", "whitelist"),
     ]
 
     groups = models.ManyToManyField(auth_models.Group, related_name="synclists")
