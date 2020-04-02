@@ -233,6 +233,8 @@ paths:
         'default':
           $ref: '#/components/responses/Errors'
 
+
+
 components:
   schemas:
     Author:
@@ -841,6 +843,7 @@ components:
       type: string
       # TODO: This could in theory be an enum
 
+
   parameters:
 
     CollectionNamespaceName:
@@ -874,6 +877,22 @@ components:
       in: path
       name: import_id
       required: true
+      schema:
+        type: string
+
+    ResponseIncludeFields:
+      name: fields
+      in: query
+      description: A list of fields to include in the response.
+      required: false
+      schema:
+        type: string
+
+    ResponseExcludeFields:
+      name: exclude_fields
+      in: query
+      description: A list of fields to exclude from the response.
+      required: false
       schema:
         type: string
 
@@ -1056,6 +1075,7 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Errors'
+
 
     Unauthorized:
       description: 'Unauthorized (401)'
