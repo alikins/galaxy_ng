@@ -233,6 +233,116 @@ paths:
         'default':
           $ref: '#/components/responses/Errors'
 
+
+  #
+  # Sync lists
+  #
+
+  '/synclists/':
+    get:
+      summary: List SyncLists
+      operationId: listSyncLists
+      parameters:
+        - $ref: '#/components/parameters/PageOffset'
+        - $ref: '#/components/parameters/PageLimit'
+        # If we use pulp base viewsets, could potentially get include/exclude fields
+        # - $ref: '#/components/parameters/ResponseIncludeFields'
+        # - $ref: '#/components/parameters/ResponseExcludeFields'
+      tags:
+        - SyncLists
+      responses:
+        '200':
+          $ref: '#/components/responses/SyncListList'
+        'default':
+          $ref: '#/components/responses/Errors'
+
+    post:
+      summary: Create a SyncList
+      operationId: createSyncList
+      tags:
+        - SyncLists
+      requestBody:
+        $ref: "#/components/requestBodies/SyncList"
+      responses:
+        "201":
+          description: "The SyncList was successfully created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncList"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        'default':
+          $ref: '#/components/responses/Errors'
+
+  '/synclists/{synclist_id}/':
+    parameters:
+        - $ref: '#/components/parameters/SyncListId'
+    get:
+      summary: Get A SyncList
+      operationId: getSyncList
+#      parameters:
+#        - $ref: '#/components/parameters/ResponseIncludeFields'
+#        - $ref: '#/components/parameters/ResponseExcludeFields'
+      tags:
+        - SyncLists
+      responses:
+        '200':
+          description: 'Response containing a SyncList'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncList'
+        'default':
+          $ref: '#/components/responses/Errors'
+
+    put:
+      summary: Update a sync list
+      operationId: putSyncList
+      requestBody:
+        $ref: "#/components/requestBodies/SyncList"
+      tags:
+        - SyncLists
+      responses:
+        "200":
+          description: "Response containing the updated SyncList"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncList"
+        'default':
+          $ref: '#/components/responses/Errors'
+
+    patch:
+      summary: Partially update a SyncList
+      operationId: patchSyncList
+      requestBody:
+        $ref: "#/components/requestBodies/SyncList"
+      tags:
+        - SyncLists
+      responses:
+        "200":
+          description: "Response containing the updated SyncList"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncList"
+        'default':
+          $ref: '#/components/responses/Errors'
+
+    delete:
+      summary: Delete a sync list
+      operationId: deleteSyncList
+      tags:
+        - SyncLists
+      responses:
+        "204":
+          description: 'The SyncList was succesfully deleted'
+        'default':
+          $ref: '#/components/responses/Errors'
+
 components:
   schemas:
     Author:
@@ -841,6 +951,79 @@ components:
       type: string
       # TODO: This could in theory be an enum
 
+    SyncList:
+      title: 'SyncList'
+      description: >
+        A SyncList is a list of Collections or Namespaces that will
+        be synced to a Repository.
+      type: object
+      properties:
+        id:
+          title: ID
+          type: integer
+          readOnly: true
+        name:
+          title: Name
+          type: string
+          maxLength: 64
+          minLength: 1
+          example: 'sync_example_com_namespace'
+        policy:
+          $ref: '#/components/schemas/SyncListPolicy'
+        repository:
+          # TODO: may become a repository name or a RepositorySummary
+          title: Repository ID
+          description: 'The ID of the Repository to sync to'
+          type: string
+          format: uuid
+        collections:
+          title: 'Collections'
+          description: 'Array of Collection IDs to sync with the Repository'
+          type: array
+          items:
+            type: string
+            format: uuid
+          uniqueItems: true
+        namespaces:
+          title: 'Namespaces'
+          description: 'Array of Namespace IDs to sync with the Repository'
+          type: array
+          items:
+            # TODO: likely will be namespace name strings
+            type: integer
+          uniqueItems: true
+      required:
+        - name
+        - repository
+        - collections
+        - namespaces
+
+    SyncListPage:
+      description: "Paginated list of SyncLists"
+      allOf:
+        - $ref: '#/components/schemas/PageInfo'
+        - type: object
+          properties:
+            data:
+              description: 'List of SyncLists for this page'
+              title: 'SyncLists'
+              type: array
+              items:
+                $ref: '#/components/schemas/SyncList'
+          required:
+            - data
+
+    SyncListPolicy:
+      title: SyncList Policy
+      description: >
+        SyncList policy can either add to a Repository (whitelist),
+        or it can exclude from a Repository (blacklist).
+      type: string
+      default: 'whitelist'
+      enum:
+        - 'blacklist'
+        - 'whitelist'
+
   parameters:
 
     CollectionNamespaceName:
@@ -874,6 +1057,22 @@ components:
       in: path
       name: import_id
       required: true
+      schema:
+        type: string
+
+    ResponseIncludeFields:
+      name: fields
+      in: query
+      description: A list of fields to include in the response.
+      required: false
+      schema:
+        type: string
+
+    ResponseExcludeFields:
+      name: exclude_fields
+      in: query
+      description: A list of fields to exclude from the response.
+      required: false
       schema:
         type: string
 
@@ -954,6 +1153,14 @@ components:
       schema:
         $ref: '#/components/schemas/SemanticVersion'
 
+    SyncListId:
+      description: 'A unique integer value identifying a SyncList.'
+      in: path
+      name: synclist_id
+      required: true
+      schema:
+        type: string
+
   requestBodies:
     Collection:
       description: 'A Collection body'
@@ -968,6 +1175,13 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Namespace'
+
+    SyncList:
+      description: "A SyncList body"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SyncList'
 
   responses:
 
@@ -1056,6 +1270,20 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Errors'
+
+    SyncList:
+      description: 'The requested SyncList'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SyncList'
+
+    SyncListList:
+      description: 'SyncLists'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SyncListPage'
 
     Unauthorized:
       description: 'Unauthorized (401)'
