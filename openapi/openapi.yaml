@@ -977,26 +977,70 @@ components:
           type: string
           format: uuid
         collections:
-          title: 'Collections'
-          description: 'Array of Collection IDs to sync with the Repository'
+          title: 'SyncListCollectionSpecs'
+          description: 'Array of SyncListCollectionSpecs to sync with the Repository'
           type: array
           items:
-            type: string
-            format: uuid
+            $ref: '#/components/schemas/SyncListCollectionSpec'
           uniqueItems: true
         namespaces:
           title: 'Namespaces'
-          description: 'Array of Namespace IDs to sync with the Repository'
+          description: 'Array of Namespace name strings to sync with the Repository'
           type: array
           items:
             # TODO: likely will be namespace name strings
-            type: integer
+            type: string
           uniqueItems: true
+          example:
+            - 'some_namespace_you_want_all_collections_from'
+            - 'redhat'
+        groups:
+          title: 'Groups'
+          description: 'Array of Groups associated with this synclist'
+          type: array
+          items:
+            # add Group/User schema
+            type: string
+          uniqueItems: true
+          example:
+            - 'example-identity-account:12345'
+        users:
+          title: 'Users'
+          description: 'Array of Users associated with this synclist'
+          type: array
+          items:
+            # add Group/User schema
+            type: string
+          uniqueItems: true
+          example:
+            - 'alikins'
+            - 'john_doe_example_com'
       required:
         - name
         - repository
         - collections
         - namespaces
+
+    SyncListCollectionSpec:
+      title: SyncList Collection Spec
+      description: >
+        CollectionSpecs are an object identifing or specifying a Collection
+      type: object
+      properties:
+        namespace:
+          title: 'Collection Namespace'
+          description: >
+            The Collection's namespace name string
+          type: string
+        name:
+          title: 'Collection Name'
+          description: >
+            The Collection's name string
+          type: string
+      example:
+        namespace: 'example_com'
+        name: 'nginx'
+
 
     SyncListPage:
       description: "Paginated list of SyncLists"
@@ -1012,6 +1056,7 @@ components:
                 $ref: '#/components/schemas/SyncList'
           required:
             - data
+
 
     SyncListPolicy:
       title: SyncList Policy
