@@ -1,6 +1,6 @@
 coverage
 flake8
-
+django-extensions
 flake8-black
 
 
