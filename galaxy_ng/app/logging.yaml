@@ -1,0 +1,84 @@
+---
+version: 1
+disable_existing_loggers: false
+dynaconf_merge: true
+filters:
+  require_debug_true:
+    (): django.utils.log.RequireDebugTrue
+formatters:
+  simple:
+    format: "{levelname} {message}"
+    style: "{"
+  verbose:
+    format:
+      "{levelname} {asctime} {name} {module}:{funcName}:{lineno:d} {process:d}
+      {thread:d} {message}"
+    style: "{"
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: verbose
+    level: DEBUG
+    # filters:
+    #  - require_debug_true
+  collection_import:
+    class: pulp_ansible.app.logutils.CollectionImportHandler
+    level: DEBUG
+    formatter: simple
+loggers:
+  "":
+    handlers:
+      - console
+    level: DEBUG
+  django:
+    level: DEBUG
+    propagate: true
+  django.server:
+    level: DEBUG
+    # propagate: true
+  django.db:
+    handlers:
+      - console
+    level: INFO
+  django.request:
+    # handlers:
+    #  - console
+    level: DEBUG
+    # propagate: false
+  django.utils.autoreload:
+    level: ERROR
+  dynaconf:
+    # handlers:
+    #  - console
+    level: DEBUG
+  galaxy_ng:
+    level: DEBUG
+  galaxy_ng.auth:
+    level: DEBUG
+  galaxy_pulp:
+    level: DEBUG
+  pulpcore:
+    # handlers:
+    #  - console
+    level: DEBUG
+  pulpcore.content:
+    level: INFO
+  pulpcore.tasking.services.worker_watcher:
+    level: INFO
+  pulp_ansible:
+    level: DEBUG
+  pulp_ansible.app.tasks.collection.import_collection:
+    level: INFO
+    handlers:
+      - collection_import
+    propagate: false
+  requests:
+    handlers:
+      - console
+    level: DEBUG
+  urllib3:
+    handlers:
+      - console
+    level: DEBUG
+  MARKDOWN:
+    level: INFO
