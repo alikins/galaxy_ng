@@ -31,54 +31,31 @@ loggers:
       - console
     level: DEBUG
   django:
-    level: DEBUG
     propagate: true
-  django.server:
-    level: DEBUG
+  django.server: {}
     # propagate: true
   django.db:
-    handlers:
-      - console
     level: INFO
-  django.request:
-    # handlers:
-    #  - console
-    level: DEBUG
-    # propagate: false
+  django.request: {}
   django.utils.autoreload:
     level: ERROR
   dynaconf:
-    # handlers:
-    #  - console
-    level: DEBUG
-  galaxy_ng:
-    level: DEBUG
-  galaxy_ng.auth:
-    level: DEBUG
-  galaxy_pulp:
-    level: DEBUG
-  pulpcore:
-    # handlers:
-    #  - console
-    level: DEBUG
+    level: INFO
+  galaxy_ng: {}
+  galaxy_ng.auth: {}
+  galaxy_pulp: {}
+  pulpcore: {}
   pulpcore.content:
     level: INFO
   pulpcore.tasking.services.worker_watcher:
     level: INFO
-  pulp_ansible:
-    level: DEBUG
+  pulp_ansible: {}
   pulp_ansible.app.tasks.collection.import_collection:
     level: INFO
     handlers:
       - collection_import
     propagate: false
-  requests:
-    handlers:
-      - console
-    level: DEBUG
-  urllib3:
-    handlers:
-      - console
-    level: DEBUG
+  requests: {}
+  urllib3: {}
   MARKDOWN:
     level: INFO
