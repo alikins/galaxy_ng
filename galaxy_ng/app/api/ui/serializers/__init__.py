@@ -20,6 +20,10 @@ from .current_user import (
     CurrentUserSerializer
 )
 
+from .synclist import (
+    SyncListSerializer,
+    SyncListCollectionSerializer,
+)
 
 __all__ = (
     # collection
@@ -37,5 +41,8 @@ __all__ = (
     'NamespaceSummarySerializer',
     'NamespaceUpdateSerializer',
     # current_user
-    'CurrentUserSerializer'
+    'CurrentUserSerializer',
+    # synclists
+    'SyncListSerializer',
+    'SyncListCollectionSerializer',
 )
