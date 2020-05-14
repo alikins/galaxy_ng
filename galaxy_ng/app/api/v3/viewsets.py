@@ -85,7 +85,7 @@ class CollectionUploadViewSet(LocalSettingsMixin, pulp_ansible_views.CollectionU
 
         task_detail = Task.objects.get(pk=task_id)
 
-        models.CollectionImport.objects.create(
+        import_obj = models.CollectionImport.objects.create(
             task_id=task_detail.pulp_id,
             created_at=task_detail.pulp_created,
             namespace=namespace,
@@ -93,11 +93,7 @@ class CollectionUploadViewSet(LocalSettingsMixin, pulp_ansible_views.CollectionU
             version=data['filename'].version,
         )
 
-        # TODO: CollectionImport.get_absolute_url() should be able to generate this, but
-        #       it needs the  repo/distro base_path for the <path> part of url
-        import_obj_url = reverse("galaxy:api:content:v3:collection-import",
-                                 kwargs={'pk': str(task_detail.pulp_id),
-                                         'path': path})
+        import_obj_url = import_obj.get_absolute_url_for_path(path)
 
         log.debug('import_obj_url: %s', import_obj_url)
 

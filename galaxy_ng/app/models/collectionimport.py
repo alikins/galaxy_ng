@@ -33,5 +33,10 @@ class CollectionImport(models.Model):
     class Meta:
         ordering = ['-task_id']
 
-    def get_absolute_url(self):
-        return reverse('galaxy:api:content:collection-import', args=[str(self.task_id)])
+    # def get_absolute_url(self):
+    #    return reverse('galaxy:api:content:v3:collection-import', args=[str(self.task_id)])
+
+    def get_absolute_url_for_path(self, path):
+        return reverse('galaxy:api:content:v3:collection-import',
+                       kwargs={'pk': str(self.task_id),
+                               'path': path})
