@@ -5,7 +5,7 @@ from rest_framework import mixins
 from galaxy_ng.app import models
 from galaxy_ng.app.api import permissions
 from galaxy_ng.app.api import base as api_base
-from galaxy_ng.app.api.ui import serializers
+from galaxy_ng.app.api.v3 import serializers
 
 
 class NamespaceFilter(filterset.FilterSet):
