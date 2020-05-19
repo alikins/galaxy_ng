@@ -3,7 +3,16 @@ from .collection import (
     CollectionUploadSerializer,
 )
 
+from .namespace import (
+    NamespaceSerializer,
+    NamespaceSummarySerializer,
+    NamespaceUpdateSerializer,
+)
+
 __all__ = (
     'CollectionVersionSerializer',
     'CollectionUploadSerializer',
+    'NamespaceSerializer',
+    'NamespaceSummarySerializer',
+    'NamespaceUpdateSerializer',
 )
