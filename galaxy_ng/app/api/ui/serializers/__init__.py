@@ -13,11 +13,6 @@ from .imports import (
     ImportTaskDetailSerializer,
     ImportTaskListSerializer,
 )
-from .namespace import (
-    NamespaceSerializer,
-    NamespaceSummarySerializer,
-    NamespaceUpdateSerializer
-)
 
 from .user import (
     UserSerializer,
@@ -38,10 +33,6 @@ __all__ = (
     # imports
     'ImportTaskDetailSerializer',
     'ImportTaskListSerializer',
-    # namespace
-    'NamespaceSerializer',
-    'NamespaceSummarySerializer',
-    'NamespaceUpdateSerializer',
     # current_user
     'CurrentUserSerializer',
     # user
