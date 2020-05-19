@@ -1,4 +1,8 @@
-from .namespace import NamespaceViewSet, MyNamespaceViewSet
+from galaxy_ng.app.api.v3.viewsets.namespace import (
+    MyNamespaceViewSet,
+    NamespaceViewSet,
+)
+
 from .collection import CollectionViewSet, CollectionVersionViewSet, CollectionImportViewSet
 from .tags import TagsViewSet
 from .user import UserViewSet, CurrentUserViewSet
