@@ -7,7 +7,6 @@ from .collection import (
 )
 
 from .namespace import (
-    MyNamespaceViewSet,
     NamespaceViewSet,
 )
 
@@ -19,5 +18,4 @@ __all__ = (
     'CollectionVersionViewSet',
     'CollectionImportViewSet',
     'NamespaceViewSet',
-    'MyNamespaceViewSet',
 )

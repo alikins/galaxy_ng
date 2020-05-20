@@ -64,17 +64,3 @@ class NamespaceViewSet(
 
     def get_queryset(self):
         return models.Namespace.objects.all()
-
-
-class MyNamespaceViewSet(NamespaceViewSet):
-    def get_queryset(self):
-        # All namespaces for users in the partner-engineers groups
-
-        if permissions.IsPartnerEngineer().has_permission(self.request, self):
-            queryset = models.Namespace.objects.all()
-            return queryset
-
-        # Just the namespaces with groups the user is in
-        queryset = models.Namespace.objects.filter(
-            groups__in=self.request.user.groups.all())
-        return queryset
