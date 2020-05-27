@@ -1,11 +1,14 @@
+import logging
+
 from django_filters import filters
 from django_filters.rest_framework import filterset, DjangoFilterBackend
-from rest_framework import mixins
 
 from galaxy_ng.app import models
 from galaxy_ng.app.api import permissions
 from galaxy_ng.app.api import base as api_base
 from galaxy_ng.app.api.v3 import serializers
+
+log = logging.getLogger(__name__)
 
 
 class NamespaceFilter(filterset.FilterSet):
@@ -33,14 +36,9 @@ class NamespaceFilter(filterset.FilterSet):
         return queryset
 
 
-class NamespaceViewSet(
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
-    api_base.GenericViewSet,
-):
+class NamespaceViewSet(api_base.ModelViewSet):
     lookup_field = "name"
+    swagger_schema = None
 
     def get_permissions(self):
         permission_list = super().get_permissions()
@@ -48,6 +46,9 @@ class NamespaceViewSet(
             permission_list.append(permissions.IsPartnerEngineer())
         elif self.request.method == 'PUT':
             permission_list.append(permissions.IsNamespaceOwnerOrPartnerEngineer())
+
+        log.debug('permissions_list: %s', permission_list)
+
         return permission_list
 
     filter_backends = (DjangoFilterBackend,)
