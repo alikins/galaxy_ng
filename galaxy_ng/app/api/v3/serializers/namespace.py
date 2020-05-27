@@ -3,26 +3,28 @@ import re
 from django.db import transaction
 
 from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import ModelSerializer, SlugRelatedField
+from rest_framework import serializers
 
 from galaxy_ng.app import models
 from galaxy_ng.app.models import auth as auth_models
 from galaxy_ng.app.auth import auth
 
 
-class NamespaceLinkSerializer(ModelSerializer):
+class NamespaceLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.NamespaceLink
         fields = ('name', 'url')
 
 
-class NamespaceSerializer(ModelSerializer):
+class NamespaceGroupsSummarySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField(max_length=64)
+
+
+class NamespaceSerializer(serializers.ModelSerializer):
     links = NamespaceLinkSerializer(many=True, required=False, read_only=True)
-    groups = SlugRelatedField(
-        many=True,
-        slug_field='name',
-        queryset=auth_models.Group.objects.all()
-    )
+
+    groups = NamespaceGroupsSummarySerializer(many=True)
 
     class Meta:
         model = models.Namespace
