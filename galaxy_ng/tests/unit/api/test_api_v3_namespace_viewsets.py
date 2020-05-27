@@ -8,7 +8,7 @@ from rest_framework import status
 from galaxy_ng.app.models import auth as auth_models
 from galaxy_ng.app.models import Namespace, NamespaceLink
 from galaxy_ng.app.api import permissions
-from galaxy_ng.app.api.v3.serializers import NamespaceSerializer, NamespaceUpdateSerializer
+from galaxy_ng.app.api.v3.serializers import NamespaceSerializer
 from galaxy_ng.app.constants import DeploymentMode
 
 from .base import BaseTestCase
@@ -70,7 +70,7 @@ class TestV3NamespaceViewSet(BaseTestCase):
             data = response.data
             log.debug('data: %s', data)
 
-            namespace = NamespaceUpdateSerializer(data=data)
+            namespace = NamespaceSerializer(data=data)
             log.debug('repr namespace serializer: %r', namespace)
 
             namespace.is_valid(raise_exception=True)

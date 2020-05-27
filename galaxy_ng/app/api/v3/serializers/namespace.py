@@ -1,3 +1,4 @@
+import logging
 import re
 
 from django.db import transaction
@@ -7,7 +8,9 @@ from rest_framework import serializers
 
 from galaxy_ng.app import models
 from galaxy_ng.app.models import auth as auth_models
-from galaxy_ng.app.auth import auth
+from galaxy_ng.app.api.v3.serializers.group import GroupSummarySerializer
+
+log = logging.getLogger(__name__)
 
 
 class NamespaceLinkSerializer(serializers.ModelSerializer):
@@ -16,15 +19,10 @@ class NamespaceLinkSerializer(serializers.ModelSerializer):
         fields = ('name', 'url')
 
 
-class NamespaceGroupsSummarySerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    name = serializers.CharField(max_length=64)
-
-
 class NamespaceSerializer(serializers.ModelSerializer):
-    links = NamespaceLinkSerializer(many=True, required=False, read_only=True)
+    links = NamespaceLinkSerializer(many=True, required=False)
 
-    groups = NamespaceGroupsSummarySerializer(many=True)
+    groups = GroupSummarySerializer(many=True)
 
     class Meta:
         model = models.Namespace
@@ -40,6 +38,7 @@ class NamespaceSerializer(serializers.ModelSerializer):
             'resources'
         )
 
+    # replace with a NamespaceNameSerializer and validate_name() ?
     def validate_name(self, name):
         if not name:
             raise ValidationError(detail={
@@ -55,55 +54,49 @@ class NamespaceSerializer(serializers.ModelSerializer):
                 'name': "Name cannot begin with '_'"})
         return name
 
-    def to_internal_value(self, data):
-        groups = data.get('groups')
-        if groups:
-            data['groups'] = self._sanitize_accounts(groups)
-        return super().to_internal_value(data)
+    def create(self, validated_data):
+        log.debug('serializer.create validated_data=%s', validated_data)
 
-    def _sanitize_accounts(self, accounts):
-        sanitized_groups = [auth_models.RH_PARTNER_ENGINEER_GROUP]
-        for account in accounts:
-            if account == auth_models.RH_PARTNER_ENGINEER_GROUP:
-                continue
-            if not account.isdigit():
-                raise ValidationError(detail={
-                    'groups': 'Provided identifications are not numbers'})
-            group, _ = auth_models.Group.objects.get_or_create_identity(
-                auth.RH_ACCOUNT_SCOPE, account)
-            sanitized_groups.append(group.name)
-        return sanitized_groups
+        links_data = validated_data.pop('links', [])
+        groups_data = validated_data.pop('groups', None)
+
+        instance = models.Namespace.objects.create(**validated_data)
+
+        ngs = auth_models.Group.objects.in_bulk([x['name'] for x in groups_data], field_name="name")
+
+        # create NamespaceLink objects if needed
+        new_links = []
+        for link_data in links_data:
+            ns_link, created = models.NamespaceLink.objects.get_or_create(**link_data)
+            new_links.append(ns_link)
+
+        instance.groups.set(list(ngs.values()))
+        instance.links.set(new_links)
+
+        return instance
 
     @transaction.atomic
     def update(self, instance, validated_data):
         links = validated_data.pop('links', None)
 
-        instance = super().update(instance, validated_data)
-
         if links is not None:
             instance.set_links(links)
 
+        groups_data = validated_data.pop('groups', [])
+
+        new_groups = []
+        for group_data in groups_data:
+            new_groups.append(auth_models.Group.objects.get(**group_data))
+
+        if groups_data:
+            instance.groups.clear()
+            instance.groups.set(new_groups)
+
+        instance = super().update(instance, validated_data)
+
+        instance.save()
+
         return instance
-
-
-class NamespaceUpdateSerializer(NamespaceSerializer):
-    """NamespaceSerializer but read_only 'name'."""
-
-    class Meta:
-        model = models.Namespace
-        fields = (
-            'id',
-            'name',
-            'company',
-            'email',
-            'avatar_url',
-            'description',
-            'links',
-            'groups',
-            'resources'
-        )
-
-        read_only_fields = ('name', )
 
 
 class NamespaceSummarySerializer(NamespaceSerializer):

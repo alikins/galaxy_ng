@@ -6,13 +6,16 @@ from .collection import (
 from .namespace import (
     NamespaceSerializer,
     NamespaceSummarySerializer,
-    NamespaceUpdateSerializer,
+)
+
+from .group import (
+    GroupSummarySerializer,
 )
 
 __all__ = (
     'CollectionVersionSerializer',
     'CollectionUploadSerializer',
+    'GroupSummarySerializer',
     'NamespaceSerializer',
     'NamespaceSummarySerializer',
-    'NamespaceUpdateSerializer',
 )

@@ -47,8 +47,6 @@ class NamespaceViewSet(api_base.ModelViewSet):
         elif self.request.method == 'PUT':
             permission_list.append(permissions.IsNamespaceOwnerOrPartnerEngineer())
 
-        log.debug('permissions_list: %s', permission_list)
-
         return permission_list
 
     filter_backends = (DjangoFilterBackend,)
@@ -58,8 +56,6 @@ class NamespaceViewSet(api_base.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list':
             return serializers.NamespaceSummarySerializer
-        elif self.action == 'update':
-            return serializers.NamespaceUpdateSerializer
         else:
             return serializers.NamespaceSerializer
 
