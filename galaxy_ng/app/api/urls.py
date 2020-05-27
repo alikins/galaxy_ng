@@ -1,7 +1,10 @@
 from django.conf import settings
 from django.urls import include, path
 
+from rest_framework import routers
+
 from . import views
+from .v3 import viewsets
 from .ui import urls as ui_urls
 from .v3 import urls as v3_urls
 
@@ -9,9 +12,14 @@ DEFAULT_DISTRIBUTION_BASE_PATH = settings.GALAXY_API_DEFAULT_DISTRIBUTION_BASE_P
 
 app_name = "api"
 
+router = routers.SimpleRouter()
+router.register('namespaces', viewsets.NamespaceViewSet, basename='namespaces')
+
 v3_urlpatterns = [
     path("_ui/", include(ui_urls)),
     path("", include(v3_urls.auth_urls)),
+
+    path('', include(router.urls)),
 
     # Set an instance of the v3 urls/viewsets at the same
     # url path as the former galaxy_api.api.v3.viewsets
