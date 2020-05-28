@@ -7,6 +7,7 @@ log = logging.getLogger(__name__)
 
 
 class NamespaceViewSet(NamespaceViewSet):
+    serializer_class = serializers.NamespaceSerializer
 
     def get_serializer_class(self):
         if self.action == 'list':
