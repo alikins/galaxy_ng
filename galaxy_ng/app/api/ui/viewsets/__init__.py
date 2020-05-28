@@ -1,4 +1,4 @@
-from galaxy_ng.app.api.v3.viewsets.namespace import (
+from .namespace import (
     NamespaceViewSet,
 )
 

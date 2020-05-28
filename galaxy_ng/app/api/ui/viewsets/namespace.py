@@ -1,11 +1,12 @@
 import logging
 
 from galaxy_ng.app.api.v3.viewsets.namespace import NamespaceViewSet
+from galaxy_ng.app.api.ui import serializers
 
 log = logging.getLogger(__name__)
 
 
-class UiNamespaceViewSet(NamespaceViewSet):
+class NamespaceViewSet(NamespaceViewSet):
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -13,5 +14,4 @@ class UiNamespaceViewSet(NamespaceViewSet):
         elif self.action == 'update':
             return serializers.NamespaceUpdateSerializer
         else:
-            return serializers.NamespaceSerializer
-
+            return self.serializer_class
