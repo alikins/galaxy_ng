@@ -38,6 +38,7 @@ class NamespaceFilter(filterset.FilterSet):
 
 class NamespaceViewSet(api_base.ModelViewSet):
     lookup_field = "name"
+    queryset = models.Namespace.objects.all()
     serializer_class = serializers.NamespaceSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = NamespaceFilter
@@ -51,6 +52,3 @@ class NamespaceViewSet(api_base.ModelViewSet):
             permission_list.append(permissions.IsNamespaceOwnerOrPartnerEngineer())
 
         return permission_list
-
-    def get_queryset(self):
-        return models.Namespace.objects.all()
