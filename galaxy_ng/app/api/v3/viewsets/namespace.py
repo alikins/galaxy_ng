@@ -38,6 +38,9 @@ class NamespaceFilter(filterset.FilterSet):
 
 class NamespaceViewSet(api_base.ModelViewSet):
     lookup_field = "name"
+    serializer_class = serializers.NamespaceSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = NamespaceFilter
     swagger_schema = None
 
     def get_permissions(self):
@@ -48,16 +51,6 @@ class NamespaceViewSet(api_base.ModelViewSet):
             permission_list.append(permissions.IsNamespaceOwnerOrPartnerEngineer())
 
         return permission_list
-
-    filter_backends = (DjangoFilterBackend,)
-
-    filterset_class = NamespaceFilter
-
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return serializers.NamespaceSummarySerializer
-        else:
-            return serializers.NamespaceSerializer
 
     def get_queryset(self):
         return models.Namespace.objects.all()
