@@ -14,6 +14,7 @@ class NamespaceLinkSerializer(ModelSerializer):
     class Meta:
         model = models.NamespaceLink
         fields = ('name', 'url')
+        ref_name = "galaxy.UiNamespaceLink"
 
 
 class NamespaceSerializer(ModelSerializer):
@@ -37,6 +38,7 @@ class NamespaceSerializer(ModelSerializer):
             'groups',
             'resources'
         )
+        ref_name = "galaxy.UiNamespace"
 
     def validate_name(self, name):
         if not name:
