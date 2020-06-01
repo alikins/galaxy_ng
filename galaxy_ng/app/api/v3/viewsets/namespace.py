@@ -42,7 +42,7 @@ class NamespaceViewSet(api_base.ModelViewSet):
     serializer_class = serializers.NamespaceSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = NamespaceFilter
-    swagger_schema = None
+    # swagger_schema = None
 
     def get_permissions(self):
         permission_list = super().get_permissions()
