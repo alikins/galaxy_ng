@@ -75,6 +75,7 @@ class CollectionUploadViewSet(LocalSettingsMixin, pulp_ansible_views.CollectionU
     # Wrap super().create() so we can create a galaxy_ng.app.models.CollectionImport based on the
     # the import task and the collection artifact details
     def create(self, request, path):
+        log.debug('path: %s', path)
 
         serializer = CollectionUploadSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -82,6 +83,7 @@ class CollectionUploadViewSet(LocalSettingsMixin, pulp_ansible_views.CollectionU
         data = serializer.validated_data
         filename = data['filename']
 
+        log.debug('filename: %s', filename)
         try:
             namespace = models.Namespace.objects.get(name=filename.namespace)
         except models.Namespace.DoesNotExist:
@@ -89,7 +91,9 @@ class CollectionUploadViewSet(LocalSettingsMixin, pulp_ansible_views.CollectionU
                 'Namespace "{0}" does not exist.'.format(filename.namespace)
             )
 
+        log.debug('namespace: %s', namespace)
         self.check_object_permissions(request, namespace)
+        log.debug('post check_object_perms')
 
         try:
             response = super(CollectionUploadViewSet, self).create(request, path)
@@ -98,6 +102,7 @@ class CollectionUploadViewSet(LocalSettingsMixin, pulp_ansible_views.CollectionU
                           data['file'].name, namespace, data.get('sha256'))
             raise
 
+        log.debug('gh123')
         task_href = response.data['task']
 
         # icky, have to extract task id from the task_href url

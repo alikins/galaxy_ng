@@ -1,9 +1,13 @@
+import logging
+
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from galaxy_ng.app.models import Namespace
 from galaxy_ng.app.models.auth import SYSTEM_SCOPE
 from django.conf import settings
 from galaxy_ng.app.constants import DeploymentMode
+
+log = logging.getLogger(__name__)
 
 
 class IsPartnerEngineer(BasePermission):
@@ -21,6 +25,12 @@ class IsNamespaceOwner(BasePermission):
     """Checks if user is in namespace owners group."""
 
     def has_object_permission(self, request, view, obj):
+        log.debug('request: %s', request)
+        log.debug('view: %s', view)
+        log.debug('obj: %s %r', obj, obj)
+        log.debug('request.user: %s request.user.is_authenticated: %s',
+                  request.user, request.user.is_authenticated)
+
         if not request.user or not request.user.is_authenticated:
             return False
 
@@ -35,7 +45,12 @@ class IsNamespaceOwner(BasePermission):
                 f" not have \"namespace\" attribute. "
             )
 
-        return namespace.groups.filter(pk__in=request.user.groups.all()).exists()
+        log.debug('namespace: %s', namespace)
+        log.debug('request.user.groups.all(): %s', request.user.groups.all())
+        log.debug('namespace.groups.all(): %s', namespace.groups.all())
+        result = namespace.groups.filter(pk__in=request.user.groups.all()).exists()
+        log.debug('result: %s', result)
+        return result
 
 
 class IsNamespaceOwnerOrReadOnly(BasePermission):
