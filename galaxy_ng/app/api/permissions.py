@@ -1,9 +1,67 @@
+import logging
+
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from galaxy_ng.app.models import Namespace
 from galaxy_ng.app.models.auth import SYSTEM_SCOPE
 from django.conf import settings
 from galaxy_ng.app.constants import DeploymentMode
+
+log = logging.getLogger(__name__)
+
+
+class InstrumentedPermission(BasePermission):
+    """Adds additional logging and diagnostics to permissions checks."""
+    inner_class = BasePermission
+
+    def __init__(self, inner_permission):
+        self.inner_permission = inner_permission
+
+    def __repr__(self):
+        return "%s(inner_permission=%s)" % (self.__class__.__name__, self.inner_permission)
+
+    def has_permission(self, request, view):
+        """
+        Return `True` if permission is granted, `False` otherwise.
+        """
+        import pprint
+        # log.debug('request: %s', pprint.pformat(request.__dict__))
+        # log.debug('request._request: %s', pprint.pformat(request._request.__dict__))
+        # log.debug('view: %s', pprint.pformat(view.__dict__))
+
+        result = self.inner_permission.has_permission(request, view)
+
+        log.debug('%s %s view=%s-%s-%s for user=%s with groups=%s and perm: %s had result: %s',
+                  request._request.method,
+                  request._request.path,
+                  view.basename, view.action, view.detail,
+                  request.user, ','.join([x.name for x in request.user.groups.all()]),
+                  self.inner_permission.__class__.__name__, result)
+
+        return result
+        # return True
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Return `True` if permission is granted, `False` otherwise.
+        """
+        # log.debug('request: %s', request)
+        # log.debug('view: %s', view)
+        log.debug('obj: %s', obj)
+
+        result = self.inner_permission.has_object_permission(request, view, obj)
+
+        log.debug('%s %s view=%s-%s-%s for user=%s, groups=%s perm=%s obj=%s had result: %s',
+                  request._request.method,
+                  request._request.path,
+                  view.basename, view.action, view.detail,
+                  request.user, ','.join([x.name for x in request.user.groups.all()]),
+                  self.inner_permission.__class__.__name__,
+                  obj,
+                  result)
+
+        return result
+        # return True
 
 
 class IsPartnerEngineer(BasePermission):

@@ -25,3 +25,12 @@ class MySyncListViewSet(SyncListViewSet):
             return models.SyncList.objects.filter(
                 groups__in=self.request.user.groups.all()
             )
+
+    # def get_permissions(self):
+    #     # base_perms = super().get_permissions()
+    #     # log.debug('my_base_perms: %s', base_perms)
+
+    #     new_perms = [permissions.InstrumentedPermission(X()) for X in self.permission_classes]
+    #     log.debug('new_perms: %s', new_perms)
+
+    #     return new_perms
