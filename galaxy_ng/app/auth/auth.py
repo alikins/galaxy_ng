@@ -1,14 +1,20 @@
 import base64
 import json
+import logging
 
 from django.db import transaction
+from django.conf import settings
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
+from pulp_ansible.app.models import AnsibleDistribution, AnsibleRepository
 from galaxy_ng.app.models.auth import Group, User
 
 
+DEFAULT_UPSTREAM_REPO_NAME = settings.GALAXY_API_DEFAULT_DISTRIBUTION_BASE_PATH
 RH_ACCOUNT_SCOPE = 'rh-identity-account'
+
+log = logging.getLogger(__name__)
 
 
 class RHIdentityAuthentication(BaseAuthentication):
@@ -46,7 +52,7 @@ class RHIdentityAuthentication(BaseAuthentication):
         first_name = user.get('first_name', '')
         last_name = user.get('last_name', '')
 
-        group, _ = Group.objects.get_or_create_identity(RH_ACCOUNT_SCOPE, account)
+        group, _ = self._ensure_group(RH_ACCOUNT_SCOPE, account)
 
         user = self._ensure_user(
             username,
@@ -58,6 +64,16 @@ class RHIdentityAuthentication(BaseAuthentication):
 
         return user, {'rh_identity': header}
 
+    def _ensure_group(self, account_scope, account):
+        """Create a auto group for the account and create a synclist distribution"""
+
+        with transaction.atomic():
+            group, created = Group.objects.get_or_create_identity(account_scope, account)
+            upstream_repo = self._get_upstream_repo(group, DEFAULT_UPSTREAM_REPO_NAME)
+            self._get_or_create_synclist_distribution(group, upstream_repo)
+
+        return group, created
+
     @staticmethod
     def _ensure_user(username, group, **attrs):
         with transaction.atomic():
@@ -68,6 +84,33 @@ class RHIdentityAuthentication(BaseAuthentication):
             if created:
                 user.groups.add(group)
         return user
+
+    @staticmethod
+    def _get_upstream_repo(group, repository_name):
+        try:
+            upstream_repo = AnsibleRepository.objects.get(name=repository_name)
+        except AnsibleRepository.DoesNotExist as exc:
+            log.exception(exc)
+            raise
+
+        return upstream_repo
+
+    @staticmethod
+    def _get_or_create_synclist_distribution(group, upstream_repository):
+        distro_name = settings.GALAXY_API_SYNCLIST_NAME_FORMAT.format(
+            account_name=group.account_number()
+        )
+
+        try:
+            distro = AnsibleDistribution.objects.get(name=distro_name, base_path=distro_name)
+        except AnsibleDistribution.DoesNotExist:
+            # Create a distro pointing to the upstream repository by default.
+            # This distro will be updated to point to a synclist repo when the synclist
+            # is populated.
+            distro, _ = AnsibleDistribution.objects.get_or_create(
+                name=distro_name, base_path=distro_name, repository=upstream_repository
+            )
+        return distro
 
     @staticmethod
     def _decode_header(raw):
