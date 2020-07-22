@@ -12,8 +12,10 @@ from django.http import HttpResponseRedirect, StreamingHttpResponse
 from django.urls import reverse
 
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework.exceptions import APIException, NotFound
 
+from pulpcore.app.response import OperationPostponedResponse
 from pulpcore.plugin.models import ContentArtifact, Task
 from pulpcore.plugin.tasking import enqueue_with_reservation
 from pulp_ansible.app.galaxy.v3 import views as pulp_ansible_views
@@ -39,6 +41,7 @@ from galaxy_ng.app.api.v3.serializers import (
 from galaxy_ng.app.common import metrics
 from galaxy_ng.app.tasks import (
     import_and_move_to_staging,
+    curate_all_synclist_repository,
     import_and_auto_approve,
     add_content_to_repository,
     remove_content_from_repository,
@@ -76,6 +79,24 @@ class CollectionViewSet(LocalSettingsMixin,
         permissions.IsNamespaceOwnerOrPartnerEngineer,
     ]
     serializer_class = CollectionSerializer
+
+    @action(detail=False, methods=['post'])
+    def curate(self, request, path):
+        log.debug(" curate for path=%s", path)
+
+        # TODO: not sure what is legit for 'locks' -akl
+        locks = [path]
+        task_args = (path,)
+        task_kwargs = {'some_key': 'some_value'}
+
+        curate_task = enqueue_with_reservation(curate_all_synclist_repository,
+                                               locks,
+                                               args=task_args,
+                                               kwargs=task_kwargs)
+
+        log.debug('curate_task: %s', curate_task)
+
+        return OperationPostponedResponse(curate_task, request)
 
 
 class CollectionVersionViewSet(LocalSettingsMixin,

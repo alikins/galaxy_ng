@@ -41,8 +41,8 @@ class MySyncListViewSet(api_base.ModelViewSet):
             [permissions.RestrictOnStandaloneDeployments()]
 
     @action(detail=True, methods=['post'])
-    def sync(self, request, pk=None):
-        log.debug('my-synclist.sync pk:%s', pk)
+    def curate(self, request, pk=None):
+        log.debug('my-synclist.curate pk:%s', pk)
 
         locks = [pk]
         task_args = (pk,)

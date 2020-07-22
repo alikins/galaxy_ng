@@ -1,6 +1,3 @@
-import os
-import yaml
-
 MIDDLEWARE = [
     'django_prometheus.middleware.PrometheusBeforeMiddleware',
     # BEGIN: Pulp standard middleware
@@ -95,10 +92,3 @@ X_PULP_API_PREFIX = "pulp_ansible/galaxy/automation-hub/api"
 
 X_PULP_CONTENT_HOST = "localhost"
 X_PULP_CONTENT_PORT = 24816
-
-PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-logging_config = yaml.safe_load(open(os.path.join(PROJECT_DIR, 'logging.yaml'), 'r'))
-LOGGING = logging_config
-
-
-# DEBUG_PROPAGATE_EXCEPTIONS = False
