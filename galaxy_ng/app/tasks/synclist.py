@@ -19,6 +19,7 @@ def curate_all_synclist_repository(upstream_repository_version_pk, **kwargs):
     in order of priority.
 
     This task need to be cancelable."""
+
     log.debug("upstream_repository_version_pk: %s", upstream_repository_version_pk)
     log.debug("kwargs: %r", kwargs)
 
@@ -45,8 +46,13 @@ def curate_synclist_repository(synclist_pk, **kwargs):
 
     # moving/updating means creating at least a 'added' and 'removed' delta and using
     # repository /move (ideally in as few steps as possible to limit number RepoVersions
-    # This likely means enqueue galaxy.app.tasks.promotion.[add|remote]_content_to_repository
-    # tasks
 
+    # This likely means enqueue galaxy.app.tasks.promotion.[add|remote]_content_to_repository
+    # tasks. Or possible pulpcore.app.tasks.repository.add_and_remove()
+
+    # Also see pulp_ansible.app.tasks.test_tasks for examples of tasks that operate over many repos
+    # and pulpcore.app.tasks.import for examples of tasks that work on lots of Content
+
+    # And pulp_ansible.tests.performance
     log.debug("synclist_pk: %s", synclist_pk)
     log.debug("kwargs: %r", kwargs)
