@@ -1,9 +1,9 @@
 import logging
 
 from rest_framework.decorators import action
-from rest_framework.response import Response
 
 # from pulpcore.plugin.models import Task
+from pulpcore.app.response import OperationPostponedResponse
 from pulpcore.plugin.tasking import enqueue_with_reservation
 
 from galaxy_ng.app import models
@@ -55,7 +55,4 @@ class MySyncListViewSet(api_base.ModelViewSet):
 
         log.debug('synclist_task: %s', synclist_task)
 
-
-        return Response(data={'whatdidyoudo?': 'youcalledsyncthatswhatyoudone',
-                              'task_id': synclist_task.id},
-                        status='202')
+        return OperationPostponedResponse(synclist_task, request)
