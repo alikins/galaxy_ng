@@ -3,9 +3,13 @@ import logging
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+# from pulpcore.plugin.models import Task
+from pulpcore.plugin.tasking import enqueue_with_reservation
+
 from galaxy_ng.app import models
 from galaxy_ng.app.api import base as api_base
 from galaxy_ng.app.api import permissions
+from galaxy_ng.app.tasks import curate_synclist_repository
 from galaxy_ng.app.api.ui import serializers
 
 log = logging.getLogger(__name__)
@@ -39,5 +43,19 @@ class MySyncListViewSet(api_base.ModelViewSet):
     @action(detail=True, methods=['post'])
     def sync(self, request, pk=None):
         log.debug('my-synclist.sync pk:%s', pk)
-        return Response(data={'whatdidyoudo?': 'youcalledsyncthatswhatyoudone'},
-                        status='200')
+
+        locks = [pk]
+        task_args = (pk,)
+        task_kwargs = {'magic_word': 'dread'}
+
+        synclist_task = enqueue_with_reservation(curate_synclist_repository,
+                                                 locks,
+                                                 args=task_args,
+                                                 kwargs=task_kwargs)
+
+        log.debug('synclist_task: %s', synclist_task)
+
+
+        return Response(data={'whatdidyoudo?': 'youcalledsyncthatswhatyoudone',
+                              'task_id': synclist_task.id},
+                        status='202')
