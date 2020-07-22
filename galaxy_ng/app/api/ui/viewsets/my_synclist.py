@@ -1,5 +1,8 @@
 import logging
 
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
 from galaxy_ng.app import models
 from galaxy_ng.app.api import base as api_base
 from galaxy_ng.app.api import permissions
@@ -32,3 +35,9 @@ class MySyncListViewSet(api_base.ModelViewSet):
     def get_permissions(self):
         return super().get_permissions() + \
             [permissions.RestrictOnStandaloneDeployments()]
+
+    @action(detail=True, methods=['post'])
+    def sync(self, request, pk=None):
+        log.debug('my-synclist.sync pk:%s', pk)
+        return Response(data={'whatdidyoudo?': 'youcalledsyncthatswhatyoudone'},
+                        status='200')
