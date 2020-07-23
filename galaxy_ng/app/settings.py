@@ -35,7 +35,7 @@ GALAXY_API_REJECTED_DISTRIBUTION_BASE_PATH = "rejected"
 
 # The format for the name of the per account synclist, and the
 # associated repository, distribution, and distribution base_paths
-GALAXY_API_SYNCLIST_NAME_FORMAT = "{account_number}-synclist"
+GALAXY_API_SYNCLIST_NAME_FORMAT = "{account_name}-synclist"
 
 # Require approval for incoming content,
 # currently using a certification flag,

@@ -59,7 +59,7 @@ class GroupManager(auth_models.GroupManager):
     @staticmethod
     def _create_distribution(group, repository):
         distro_name = settings.GALAXY_API_SYNCLIST_NAME_FORMAT.format(
-            account_number=group.account_number())
+            account_name=group.account_number())
 
         try:
             distro = AnsibleDistribution.objects.get(name=distro_name, base_path=distro_name)
