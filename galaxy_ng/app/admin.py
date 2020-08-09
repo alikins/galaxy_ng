@@ -3,11 +3,13 @@ from django.contrib import admin
 from django.contrib.auth.models import Permission
 from django.contrib.auth.hashers import make_password, check_password
 
-from .models import User, Group, Namespace, NamespaceLink, CollectionImport
+from pulpcore.app.admin import BaseModelAdmin
+
+from .models import User, Group, Namespace, NamespaceLink, CollectionImport, SyncList
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(BaseModelAdmin):
     list_display = (
         'id',
         'password',
@@ -43,13 +45,13 @@ class UserAdmin(admin.ModelAdmin):
 
 
 @admin.register(Group)
-class GroupAdmin(admin.ModelAdmin):
+class GroupAdmin(BaseModelAdmin):
     list_display = ('id', 'name')
     search_fields = ('name',)
 
 
 @admin.register(Namespace)
-class NamespaceAdmin(admin.ModelAdmin):
+class NamespaceAdmin(BaseModelAdmin):
     list_display = (
         'id',
         'name',
@@ -65,14 +67,14 @@ class NamespaceAdmin(admin.ModelAdmin):
 
 
 @admin.register(NamespaceLink)
-class NamespaceLinkAdmin(admin.ModelAdmin):
+class NamespaceLinkAdmin(BaseModelAdmin):
     list_display = ('id', 'name', 'url', 'namespace')
     list_filter = ('namespace',)
     search_fields = ['namespace__name', 'namespace__company', 'name', 'url']
 
 
 @admin.register(CollectionImport)
-class CollectionImportAdmin(admin.ModelAdmin):
+class CollectionImportAdmin(BaseModelAdmin):
     list_display = ('task_id', 'created_at', 'namespace', 'name', 'version')
     list_filter = ('created_at', 'namespace')
     search_fields = ('name',)
@@ -80,12 +82,14 @@ class CollectionImportAdmin(admin.ModelAdmin):
 
 
 @admin.register(Permission)
-class PermissionAdmin(admin.ModelAdmin):
+class PermissionAdmin(BaseModelAdmin):
     list_display = ('id', 'name', 'content_type', 'codename')
     raw_id_fields = ('content_type',)
     search_fields = ('name', 'content_type__app_label', 'content_type__model', 'codename')
 
 
-# @admin.register(ContentType)
-# class ContentTypeAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'app_label', 'model')
+@admin.register(SyncList)
+class SyncListAdmin(BaseModelAdmin):
+    list_display = ('id', 'name', 'policy', 'repository')
+    raw_id_fields = ('groups', 'users', 'collections', 'namespaces')
+    search_fields = ('name',)
