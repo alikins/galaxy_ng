@@ -166,35 +166,15 @@ def curate_synclist_repository(synclist_pk, **kwargs):
     if synclist.policy == 'exclude':
         latest_upstream = upstream_repository.latest_version()
 
-        if latest_upstream:
-            # all the content pk's in the latest version of the upstream repository
-            latest_upstream_content_pks = \
-                [str(vpk) for vpk in latest_upstream.content.values_list("pk", flat=True)]
-
-        log.debug('latest_upstrean_content_pks:\n%s',
-                  pf(sorted(latest_upstream_content_pks)))
-
         log.debug('latest_upstream: %s %s', latest_upstream, type(latest_upstream))
 
         excluded_content_pks = \
             CollectionVersion.objects.filter(collection_id__in=synclist.collections.all(),
-                                             is_highest=True)
-
-        excluded_this_repo_version = \
-            latest_upstream.content.filter(ansible_collectionversion__in=excluded_content_pks)
-        log.debug('excluded_this_repo_version: %s', excluded_this_repo_version)
+                                             is_highest=True,
+                                             repositories=synclist.upstream_repository)
 
         log.debug('excluded_content_pks:\n%s',
-                  pf(excluded_content_pks))
-
-        expected_synclist_repo_content_unit_uuids = \
-            set(latest_upstream_content_pks) - set(excluded_content_pks)
-
-        expected_synclist_repo_content_units = \
-            [str(exp) for exp in sorted(list(expected_synclist_repo_content_unit_uuids))]
-
-        log.debug('expected_synclist_repo_content_units:\n%s',
-                  pf(sorted(list(expected_synclist_repo_content_units))))
+                  pf([x.natural_key() for x in excluded_content_pks]))
 
         task_kwargs = {'base_version_pk': str(upstream_repository.latest_version().pulp_id),
                        'repository_pk': str(synclist.repository.pulp_id),
@@ -216,26 +196,13 @@ def curate_synclist_repository(synclist_pk, **kwargs):
     if synclist.policy == 'include':
         latest_upstream = upstream_repository.latest_version()
 
-        if latest_upstream:
-            # all the content pk's in the latest version of the upstream repository
-            latest_upstream_content_pks = \
-                [str(vpk) for vpk in latest_upstream.content.values_list("pk", flat=True)]
-        log.debug('latest_upstrean_content_pks:\n%s',
-                  pf(sorted(latest_upstream_content_pks)))
-
         added_all_content_pks = \
             CollectionVersion.objects.filter(collection_id__in=synclist.collections.all(),
-                                             is_highest=True)
-
-        log.debug('added_all_content_pks: %s', added_all_content_pks)
-
-        added_this_repo_version = \
-            latest_upstream.content.filter(ansible_collectionversion__in=added_all_content_pks)
-
-        log.debug('added_this_repo_version: %s', added_this_repo_version)
+                                             is_highest=True,
+                                             repositories=synclist.upstream_repository)
 
         log.debug('added_all_content_pks:\n%s',
-                  pf(added_all_content_pks))
+                  pf([x.natural_key() for x in added_all_content_pks]))
 
         task_kwargs = {'repository_pk': str(synclist.repository.pulp_id),
                        'add_content_units': added_all_content_pks,
