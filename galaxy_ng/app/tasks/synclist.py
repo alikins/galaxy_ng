@@ -1,13 +1,11 @@
 import logging
-import pprint
 import time
 
-from django.db.models import F, Subquery
+from django.db.models import F
 
 from pulpcore.app.models import (
     CreatedResource,
     GroupProgressReport,
-    # RepositoryVersion,
     Task,
     TaskGroup,
 )
@@ -18,18 +16,12 @@ from pulpcore.tasking.tasks import enqueue_with_reservation
 from pulp_ansible.app.models import (
     AnsibleRepository,
     CollectionVersion,
+    ProgressReport,
 )
 
 from galaxy_ng.app import models
-from galaxy_ng.app.models.progress import LoggingProgressReport
-
 
 log = logging.getLogger(__name__)
-
-# progress_report_factory = ProgressReport
-progress_report_factory = LoggingProgressReport.create
-
-pf = pprint.pformat
 
 
 def curate_all_synclist_repository(upstream_repository_name, **kwargs):
@@ -67,9 +59,9 @@ def curate_all_synclist_repository(upstream_repository_name, **kwargs):
         total=synclist_qs.count(),
         task_group=task_group).save()
 
-    with progress_report_factory(message="Synclists curating upstream repo task",
-                                 code="synclist.curate.log",
-                                 total=synclist_qs.count()) as task_progress_report:
+    with ProgressReport(message="Synclists curating upstream repo task",
+                        code="synclist.curate.log",
+                        total=synclist_qs.count()) as task_progress_report:
 
         for synclist in synclist_qs:
             # TODO: filter down to just synclists that have a synclist repo
@@ -146,8 +138,6 @@ def curate_synclist_repository(synclist_pk, **kwargs):
         task_kwargs = {'repository_pk': str(synclist.repository.pulp_id),
                        'add_content_units': collection_versions,
                        'remove_content_units': ['*']}
-
-    log.debug('task_kwargs: %s', pf(task_kwargs))
 
     subtask = enqueue_with_reservation(add_and_remove,
                                        locks,
