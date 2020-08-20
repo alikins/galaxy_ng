@@ -41,6 +41,8 @@ RUN set -ex; \
     && dnf clean all \
     && rm -rf /var/cache/dnf/ \
     && rm -f /var/lib/rpm/__db.* \
+    && mkdir --mode=2775 /venv \
+    && chown ${USER_NAME}:${USER_GROUP} /venv \
     \
     && python3 -m venv /venv
 
@@ -50,9 +52,13 @@ ENV PATH="/venv/bin:${PATH}" \
 COPY ./requirements/requirements.common.txt /tmp/requirements.txt
 
 RUN set -ex; \
-    pip install --no-cache-dir --upgrade pip \
-    && if [[ "${LOCK_REQUIREMENTS}" -eq "1" ]]; then \
-    pip install --no-cache-dir --requirement /tmp/requirements.txt; fi
+    chmod 2775 /venv/bin \
+    pip install --cache-dir=/src/pip_cache --upgrade pip \
+    && pip install --cache-dir=/src/pip_cache --requirement /tmp/requirements.txt
+
+RUN set -ex; \
+    mkdir --mode=2775 /app \
+    && chown ${USER_NAME}:${USER_GROUP} /app
 
 # Install application
 COPY . /app
@@ -60,28 +66,30 @@ COPY . /app
 # When LOCK_REQUIREMENTS is disabled avoid running collectstatic here
 # on that case developer should run collectstatic manually
 RUN set -ex; \
-    pip install --no-cache-dir --editable /app \
+    pip install --cache-dir=/src/pip_cache --editable /app \
     && pip install -r /app/requirements/requirements.dev.txt \
     && if [[ "${LOCK_REQUIREMENTS}" -eq "1" ]]; then \
-    PULP_CONTENT_ORIGIN=x django-admin collectstatic; fi
+    && PULP_CONTENT_ORIGIN=x django-admin collectstatic
 
 # Finalize installation
 RUN set -ex; \
-    mkdir -p /var/lib/pulp/artifact \
+    mkdir -p /entrypoints.d \
+            /etc/ansible \
+    && mkdir --mode=2775 -p /var/lib/pulp \
+    && chown ${USER_NAME}:${USER_GROUP} /var/lib/pulp \
+    && mkdir --mode=2775 -p \
+             /var/lib/pulp/artifact \
              /var/lib/pulp/tmp \
              /tmp/ansible \
-             /etc/ansible \
-             /entrypoints.d \
-    && chown -R ${USER_NAME}:${USER_GROUP} \
-        /app \
-        /venv \
+    && chown ${USER_NAME}:${USER_GROUP} \
         /var/lib/pulp \
+        /var/lib/pulp/artifact \
+        /var/lib/pulp/tmp \
         /tmp/ansible \
         /etc/ansible \
-    && chmod -R 0775 /var/lib/pulp \
-                     /app/docker/entrypoint.sh \
+    && chmod -R 2775 /app/docker/entrypoint.sh \
                      /app/docker/bin/* \
-                     /tmp/ansible \
+
     && mv /app/docker/entrypoint.sh /entrypoint.sh \
     && mv /app/ansible.cfg /etc/ansible/ansible.cfg \
     && mv /app/docker/bin/* /usr/local/bin

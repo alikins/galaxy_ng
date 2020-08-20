@@ -19,6 +19,8 @@ services:
       - "DEV_SOURCE_PATH=${DEV_SOURCE_PATH}"
       - "COMPOSE_PROFILE=${COMPOSE_PROFILE}"
     entrypoint: "/bin/true"
+    volumes:
+      - "${COMPOSE_CONTEXT}/..:/src:z"
     tmpfs:
       - "/var/lib/pulp/artifact"
       - "/var/lib/pulp/tmp"
