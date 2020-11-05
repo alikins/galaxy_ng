@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('galaxy', '0010_add_staging_rejected_repos'),
+        ('galaxy', '0014_cleanup_galaxy_collection_orphans.py'),
     ]
 
     operations = [
