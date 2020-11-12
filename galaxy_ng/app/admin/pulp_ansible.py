@@ -39,9 +39,11 @@ class CollectionAdmin(PulpModelAdmin):
         "pulp_last_updated",
         "namespace",
         "name",
-        "deprecated",
+        # "deprecated",
     )
-    list_filter = ("pulp_created", "pulp_last_updated", "deprecated")
+    list_filter = ("pulp_created", "pulp_last_updated",
+                   # "deprecated",
+                   )
     search_fields = (
         "namespace",
         "name",
