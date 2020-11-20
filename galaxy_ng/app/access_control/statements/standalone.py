@@ -94,9 +94,15 @@ STANDALONE_STATEMENTS = {
         },
         {
             "action": ["update", "partial_update"],
-            "principal": "authenticated",
+            "principal": ["authenticated"],
             "effect": "allow",
-            "condition": "has_model_perms:galaxy.change_user"
+            "condition": "is_current_user"
+        },
+        {
+            "action": ["update", "partial_update"],
+            "principal": ["group:org_admin"],
+            "effect": "allow",
+            "condition": "has_groups_param_obj_perms:galaxy.change_user"
         },
     ],
     'MyUserViewSet': [

@@ -6,6 +6,7 @@ from django.conf import settings
 from rest_access_policy import AccessPolicy, AccessPolicyException
 from rest_framework.exceptions import NotFound
 
+from galaxy_ng.app.api.ui.serializers import UserSerializer
 from galaxy_ng.app import models
 
 from galaxy_ng.app.access_control.statements import STANDALONE_STATEMENTS, INSIGHTS_STATEMENTS
@@ -26,6 +27,7 @@ class AccessPolicyVerboseMixin:
 
     def has_permission(self, request, view):
         result = super().has_permission(request, view)
+        log.debug('view.get_authenticators: %s', view.get_authenticators())
         log.debug('view.get_perms(): %s', view.get_permissions())
         log.debug('%s %s view=%s-%s-%s for user=%s with groups=%s and had result: %s',
                   request._request.method,
@@ -54,7 +56,12 @@ class AccessPolicyVerboseMixin:
     def _evaluate_statements(
         self, statements: List[dict], request, view, action: str
     ) -> bool:
+        log.debug('policy.Name: %s', self.NAME)
+        log.debug('action: %s', action)
+
         statements = self._normalize_statements(statements)
+        log.debug('norm statements:\n%s', pf(statements))
+
         matched = self._get_statements_matching_principal(request, statements)
         log.debug('matched(principal):\n%s', pf(matched))
 
@@ -129,6 +136,8 @@ class AccessPolicyVerboseMixin:
         matched = []
 
         for statement in statements:
+            log.debug("statement: %s", statement)
+
             principals = statement["principal"]
             found = False
 
@@ -143,7 +152,10 @@ class AccessPolicyVerboseMixin:
             elif self.id_prefix + str(user.pk) in principals:
                 found = True
             else:
+                log.debug("No '*', 'authenticated', 'anonymous', or user id in %s", principals)
                 log.debug('trying groups now')
+                log.debug("user_roles: %s", user_roles)
+                log.debug("request.auth: %s", pf(request.auth))
                 if not user_roles:
                     user_roles = self.get_user_group_values(user)
 
@@ -155,7 +167,9 @@ class AccessPolicyVerboseMixin:
                         found = True
                         break
 
+            log.debug("found: %s", found)
             if found:
+                log.debug("matched %s", statement)
                 matched.append(statement)
 
         return matched
@@ -224,12 +238,58 @@ class CollectionRemoteAccessPolicy(AccessPolicyBase):
 class UserAccessPolicy(AccessPolicyBase):
     NAME = 'UserViewSet'
 
-
-class MyUserAccessPolicy(AccessPolicyBase):
-    NAME = 'MyUserViewSet'
-
     def is_current_user(self, request, view, action):
+        log.debug("request.user %s == view.get_object(): %s", request.user, view.get_object())
         return request.user == view.get_object()
+
+    def get_user_group_values(self, user) -> List[str]:
+        log.debug("user: %s", user)
+        log.debug("user dict:\n%s", pf(user.__dict__))
+        res = super().get_user_group_values(user)
+        log.debug("res: %s", res)
+        return res
+        # return list(user.roles.values_list("title", flat=True))
+
+    def has_groups_param_obj_perms(self, request, view, action, permission):
+        """
+        Checks if the current user has object-level permission on the ``groups`` object.
+
+        The object in this case is the one specified by the ``remote`` parameter. For example when
+        syncing the ``remote`` parameter is passed in as an argument.
+
+        """
+        log.debug("permission: %s", permission)
+
+        user_instance = view.get_object()
+        log.debug("user_instance: %s", user_instance)
+        log.debug("request.user: %s", request.user)
+
+        user_serializer = UserSerializer()
+        log.debug("user_serializer: %r", user_serializer)
+
+        serializer = UserSerializer(data=request.data, context={"request": request})
+        # serializer = UserSerializer(user_instance, context={"request": request})
+        log.debug("serializer: %r", serializer)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as exc:
+            log.exception(exc)
+            raise
+
+        log.debug("validated_data\n%s", pf(serializer.validated_data))
+
+        groups = serializer.validated_data.get("groups")
+        log.debug('groups: %s', groups)
+
+        res = request.user.has_perm(permission, groups)
+        log.debug('res: %s', res)
+
+        return res
+
+
+class MyUserAccessPolicy(UserAccessPolicy):
+    NAME = 'MyUserViewSet'
 
 
 class SyncListAccessPolicy(AccessPolicyBase):
