@@ -1,8 +1,12 @@
+import logging
+
 from django.contrib.auth import password_validation
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from galaxy_ng.app.models import auth as auth_models
+
+log = logging.getLogger(__name__)
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -70,6 +74,8 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, data):
+        log.debug('instance: %s', instance)
+        log.debug('data: %s', data)
         instance = self._set_password(instance, data)
         return super().update(instance, data)
 
