@@ -12,7 +12,12 @@ from galaxy_ng.app import models
 from galaxy_ng.app.access_control.statements import STANDALONE_STATEMENTS, INSIGHTS_STATEMENTS
 
 log = logging.getLogger(__name__)
-pf = pprint.pformat
+# pf = pprint.pformat
+
+
+# def pf(*args):
+#     return args
+
 
 STATEMENTS = {'insights': INSIGHTS_STATEMENTS,
               'standalone': STANDALONE_STATEMENTS}
@@ -60,19 +65,19 @@ class AccessPolicyVerboseMixin:
         log.debug('action: %s', action)
 
         statements = self._normalize_statements(statements)
-        log.debug('norm statements:\n%s', pf(statements))
+        log.debug('norm statements:\n%s', statements)
 
         matched = self._get_statements_matching_principal(request, statements)
-        log.debug('matched(principal):\n%s', pf(matched))
+        log.debug('matched(principal):\n%s', matched)
 
         matched = self._get_statements_matching_action(request, action, matched)
-        log.debug('matched(action):\n%s', pf(matched))
+        log.debug('matched(action):\n%s', matched)
 
         matched = self._get_statements_matching_context_conditions(
             request, view, action, matched
         )
 
-        log.debug('matched(context):\n%s', pf(matched))
+        log.debug('matched(context):\n%s', matched)
 
         denied = [_ for _ in matched if _["effect"] != "allow"]
         for deny in denied:
@@ -102,9 +107,12 @@ class AccessPolicyVerboseMixin:
             Condition value can contain a value that is passed to method, if
             formatted as `<method_name>:<arg_value>`.
         """
+        log.debug("condition: |%s|", condition)
         parts = condition.split(":", 1)
         method_name = parts[0]
         arg = parts[1] if len(parts) == 2 else None
+        log.debug("method_name=%s", method_name)
+        log.debug("parts: %s", parts)
         method = self._get_condition_method(method_name)
 
         if arg is not None:
@@ -155,7 +163,7 @@ class AccessPolicyVerboseMixin:
                 log.debug("No '*', 'authenticated', 'anonymous', or user id in %s", principals)
                 log.debug('trying groups now')
                 log.debug("user_roles: %s", user_roles)
-                log.debug("request.auth: %s", pf(request.auth))
+                log.debug("request.auth: %s", request.auth)
                 if not user_roles:
                     user_roles = self.get_user_group_values(user)
 
@@ -183,20 +191,37 @@ class AccessPolicyBase(AccessPolicyVerboseMixin, AccessPolicy):
         statements = self._get_statements(settings.GALAXY_DEPLOYMENT_MODE)
         return statements.get(self.NAME, [])
 
+    def _get_rh_identity(self, request):
+        if not isinstance(request.auth, dict):
+            return False
+        x_rh_identity = request.auth.get('rh_identity')
+        log.debug('x_rh_identity: %s', x_rh_identity)
+        if not x_rh_identity:
+            return False
+        return x_rh_identity
+
     # used by insights access policy
     def has_rh_entitlements(self, request, view, permission):
         log.debug('request: %s', request)
         log.debug('permission: %s', permission)
         log.debug('request.auth: %s', request.auth)
-        if not isinstance(request.auth, dict):
+
+        x_rh_identity = self._get_rh_identity(request)
+        if not x_rh_identity:
             return False
-        header = request.auth.get('rh_identity')
-        log.debug('header: %s', header)
-        if not header:
-            return False
-        entitlements = header.get('entitlements', {})
+
+        entitlements = x_rh_identity.get('entitlements', {})
         entitlement = entitlements.get(settings.RH_ENTITLEMENT_REQUIRED, {})
         return entitlement.get('is_entitled', False)
+
+    def is_org_admin(self, request, view, permission):
+        log.debug('request: %s', request)
+        log.debug('permission: %s', permission)
+        log.debug('request.auth: %s', request.auth)
+
+        x_rh_identity = self._get_rh_identity(request)
+        if not x_rh_identity:
+            return False
 
     # # used by insights access policy
     # def has_rh_entitlements(self, request, view, permission):
@@ -244,7 +269,7 @@ class UserAccessPolicy(AccessPolicyBase):
 
     def get_user_group_values(self, user) -> List[str]:
         log.debug("user: %s", user)
-        log.debug("user dict:\n%s", pf(user.__dict__))
+        log.debug("user dict:\n%s", user.__dict__)
         res = super().get_user_group_values(user)
         log.debug("res: %s", res)
         return res
@@ -262,14 +287,24 @@ class UserAccessPolicy(AccessPolicyBase):
 
         user_instance = view.get_object()
         log.debug("user_instance: %s", user_instance)
+        user_instance_groups = user_instance.groups.all()
+        log.debug("user_instance.groups.all(): %s", user_instance_groups)
+
         log.debug("request.user: %s", request.user)
+        log.debug("request.user.groups.all: %s", request.user.groups.all())
 
-        user_serializer = UserSerializer()
-        log.debug("user_serializer: %r", user_serializer)
+        log.debug("request.user.get_all_permissions: %s", request.user.get_all_permissions())
+        res = request.user.has_perm(permission, user_instance)
+        log.debug("%s has_perm %s for %s == %s",
+                  request.user, permission, user_instance, res)
 
-        serializer = UserSerializer(data=request.data, context={"request": request})
+        # user_serializer = UserSerializer()
+        # log.debug("user_serializer: %r", user_serializer)
+
+        serializer = UserSerializer(data=request.data, context={"request": request},
+                                    partial=True)
         # serializer = UserSerializer(user_instance, context={"request": request})
-        log.debug("serializer: %r", serializer)
+        # log.debug("serializer: %r", serializer)
 
         try:
             serializer.is_valid(raise_exception=True)
@@ -277,7 +312,7 @@ class UserAccessPolicy(AccessPolicyBase):
             log.exception(exc)
             raise
 
-        log.debug("validated_data\n%s", pf(serializer.validated_data))
+        log.debug("validated_data\n%s", serializer.validated_data)
 
         groups = serializer.validated_data.get("groups")
         log.debug('groups: %s', groups)

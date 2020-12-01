@@ -100,7 +100,7 @@ STANDALONE_STATEMENTS = {
         },
         {
             "action": ["update", "partial_update"],
-            "principal": ["group:org_admin"],
+            "principal": ["authenticated"],
             "effect": "allow",
             "condition": "has_groups_param_obj_perms:galaxy.change_user"
         },
