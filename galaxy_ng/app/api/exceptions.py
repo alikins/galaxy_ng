@@ -5,6 +5,9 @@ from rest_framework import exceptions
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
+import logging
+log = logging.getLogger(__name__)
+
 
 def _get_errors(detail, *, status, title, source=None):
     if isinstance(detail, list):
@@ -44,8 +47,15 @@ def _handle_drf_api_exception(exc):
 def exception_handler(exc, context):
     """Custom exception handler."""
 
+    log.exception(exc)
     if isinstance(exc, Http404):
         exc = exceptions.NotFound()
+    # Handle drf permission exceptions as drf exceptions extracting more detail
+    elif isinstance(exc,
+                    (exceptions.PermissionDenied,
+                     exceptions.AuthenticationFailed,
+                     exceptions.NotAuthenticated)):
+        return _handle_drf_api_exception(exc)
     elif isinstance(exc, PermissionDenied):
         exc = exceptions.PermissionDenied()
 
