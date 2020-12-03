@@ -1,13 +1,18 @@
+import logging
+
 from django.shortcuts import get_object_or_404
 from django_filters import filters
 from django_filters.rest_framework import filterset, DjangoFilterBackend
 
 from rest_framework import mixins
+from rest_framework import exceptions
 
 from galaxy_ng.app.models import auth as auth_models
 from galaxy_ng.app.access_control import access_policy
 from galaxy_ng.app.api.ui import serializers, versioning
 from galaxy_ng.app.api import base as api_base
+
+log = logging.getLogger(__name__)
 
 
 class UserFilter(filterset.FilterSet):
@@ -49,6 +54,23 @@ class UserViewSet(
     filterset_class = UserFilter
     permission_classes = [access_policy.UserAccessPolicy]
     versioning_class = versioning.UIVersioning
+
+    def permission_denied(self, request, message=None, code=None):
+        """
+        If request is not permitted, determine what kind of exception to raise.
+        """
+        log.debug('request.authenticators: %s', request.authenticators)
+        log.debug('request.successful_authenticator: %s', request.successful_authenticator)
+        log.debug('self.get_permissions: %s', self.get_permissions())
+
+        for perm in self.get_permissions():
+            message = getattr(perm, 'message', None)
+            code = getattr(perm, 'code', None)
+            log.debug("perm: %s message: %s code: %s", perm, message, code)
+
+        if request.authenticators and not request.successful_authenticator:
+            raise exceptions.NotAuthenticated()
+        raise exceptions.PermissionDenied(detail=message, code=code)
 
 
 class CurrentUserViewSet(

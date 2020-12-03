@@ -2,6 +2,8 @@ from django.db import transaction
 from django_filters import filters
 from django_filters.rest_framework import filterset, DjangoFilterBackend
 
+from rest_framework import exceptions
+
 from pulpcore.app import viewsets
 from galaxy_ng.app.access_control import access_policy
 
@@ -37,6 +39,17 @@ class GroupViewSet(LocalSettingsMixin, viewsets.GroupViewSet):
                 detail={'name': f'A group named {name} already exists.'}
             )
         return super().create(request, *args, **kwargs)
+
+    # TODO: add a permission_denied() method and use that to raise
+    #       a better auth error exception/message
+
+    def permission_denied(self, request, message=None, code=None):
+        """
+        If request is not permitted, determine what kind of exception to raise.
+        """
+        if request.authenticators and not request.successful_authenticator:
+            raise exceptions.NotAuthenticated()
+        raise exceptions.PermissionDenied(detail=message, code=code)
 
 
 class GroupModelPermissionViewSet(LocalSettingsMixin, viewsets.GroupModelPermissionViewSet):

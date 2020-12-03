@@ -30,6 +30,14 @@ class AccessPolicyVerboseMixin:
     to instrument the low level permissions checks.
     """
 
+    @property
+    def message(self):
+        return "AccessPolicy said no"
+
+    @property
+    def code(self):
+        return "access_policy_denied"
+
     def has_permission(self, request, view):
         result = super().has_permission(request, view)
         log.debug('view.get_authenticators: %s', view.get_authenticators())
