@@ -7,6 +7,7 @@ from rest_framework.exceptions import NotFound
 from galaxy_ng.app import models
 
 from galaxy_ng.app.access_control.statements import STANDALONE_STATEMENTS, INSIGHTS_STATEMENTS
+from galaxy_ng.app.access_control.access_policy_verbose import AccessPolicyVerboseMixin
 
 log = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ STATEMENTS = {'insights': INSIGHTS_STATEMENTS,
               'standalone': STANDALONE_STATEMENTS}
 
 
-class AccessPolicyBase(AccessPolicy):
+class AccessPolicyBase(AccessPolicyVerboseMixin, AccessPolicy):
     def _get_statements(self, deployment_mode):
         return STATEMENTS[deployment_mode]
 
@@ -22,16 +23,42 @@ class AccessPolicyBase(AccessPolicy):
         statements = self._get_statements(settings.GALAXY_DEPLOYMENT_MODE)
         return statements.get(self.NAME, [])
 
+    def _get_rh_identity(self, request):
+        if not isinstance(request.auth, dict):
+            log.debug("No request rh_identity request.auth found for request %s", request)
+            return False
+
+        x_rh_identity = request.auth.get('rh_identity')
+        if not x_rh_identity:
+            return False
+
+        return x_rh_identity
+
     # used by insights access policy
     def has_rh_entitlements(self, request, view, permission):
-        if not isinstance(request.auth, dict):
+
+        x_rh_identity = self._get_rh_identity(request)
+
+        if not x_rh_identity:
+            log.debug("No x_rh_identity found when check entitlements for request %s for view %s",
+                      request, view)
             return False
-        header = request.auth.get('rh_identity')
-        if not header:
-            return False
-        entitlements = header.get('entitlements', {})
+
+        entitlements = x_rh_identity.get('entitlements', {})
         entitlement = entitlements.get(settings.RH_ENTITLEMENT_REQUIRED, {})
         return entitlement.get('is_entitled', False)
+
+    def is_org_admin(self, request, view, permission):
+        """Check the rhn_entitlement data to see if user is an org admin"""
+        x_rh_identity = self._get_rh_identity(request)
+        if not x_rh_identity:
+            log.debug("No x_rh_identity found for request %s for view %s",
+                      request, view)
+            return False
+
+        identity = x_rh_identity['identity']
+        user = identity['user']
+        return user.get('is_org_admin', False)
 
 
 class NamespaceAccessPolicy(AccessPolicyBase):
