@@ -5,9 +5,6 @@ from rest_framework import exceptions
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
-import logging
-log = logging.getLogger(__name__)
-
 
 def _get_errors(detail, *, status, title, source=None, context=None):
     if isinstance(detail, list):
@@ -23,14 +20,27 @@ def _get_errors(detail, *, status, title, source=None, context=None):
             'title': title,
         }
 
-        # TODO: if the context has a request object, use it to build a
-        #       unique error id so we can send it to client and log it and
-        #       cross reference later
-
         if title != detail:
             error['detail'] = str(detail)
         if source and source != api_settings.NON_FIELD_ERRORS_KEY:
             error['source'] = {'parameter': source}
+
+        meta = {}
+
+        # Provide the access_policy name to give a hint to origin of perm errors
+        try:
+            access_policy = context['access_policy']
+            meta['access_policy'] = access_policy
+        except KeyError:
+            pass
+
+        try:
+            deployment_mode = context['deployment_mode']
+            meta['deployment_mode'] = deployment_mode
+        except KeyError:
+            pass
+
+        error['meta'] = meta
 
         yield error
 
