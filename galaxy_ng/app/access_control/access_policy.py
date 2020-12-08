@@ -200,7 +200,10 @@ class AccessPolicyBase(AccessPolicyVerboseMixin, AccessPolicy):
         if not x_rh_identity:
             return False
 
-        log.debug('x_rh_identity: %s', x_rh_identity)
+        import pprint
+        log.debug('x_rh_identity: %s', pprint.pf(x_rh_identity))
+
+        return x_rh_identity.get('is_org_admin', False)
 
 
 class NamespaceAccessPolicy(AccessPolicyBase):

@@ -51,12 +51,14 @@ GALAXY_PAGINATION_CLASS = "galaxy_ng.app.api.pagination.LimitOffsetPagination"
 GALAXY_AUTHENTICATION_CLASSES = [
     "rest_framework.authentication.SessionAuthentication",
     "rest_framework.authentication.TokenAuthentication",
+    "galaxy_ng.app.auth.auth.RHIdentityAuthentication",
 ]
 # Settings for insights mode
 # GALAXY_AUTHENTICATION_CLASSES = ["galaxy_ng.app.auth.auth.RHIdentityAuthentication"]
 
 # set to 'insights' for cloud.redhat.com deployments
-GALAXY_DEPLOYMENT_MODE = 'standalone'
+# GALAXY_DEPLOYMENT_MODE = 'standalone'
+GALAXY_DEPLOYMENT_MODE = 'insights'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
