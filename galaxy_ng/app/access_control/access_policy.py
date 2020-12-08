@@ -192,18 +192,13 @@ class AccessPolicyBase(AccessPolicyVerboseMixin, AccessPolicy):
         return entitlement.get('is_entitled', False)
 
     def is_org_admin(self, request, view, permission):
-        log.debug('request: %s', request)
-        log.debug('permission: %s', permission)
-        log.debug('request.auth: %s', request.auth)
-
         x_rh_identity = self._get_rh_identity(request)
         if not x_rh_identity:
             return False
 
-        import pprint
-        log.debug('x_rh_identity: %s', pprint.pf(x_rh_identity))
-
-        return x_rh_identity.get('is_org_admin', False)
+        identity = x_rh_identity['identity']
+        user = identity['user']
+        return user.get('is_org_admin', False)
 
 
 class NamespaceAccessPolicy(AccessPolicyBase):
