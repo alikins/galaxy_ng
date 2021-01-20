@@ -22,3 +22,23 @@ exclude = '''
 )/
 '''
 
+
+[tool.poetry]
+name = "galaxy_ng"
+version = "0.1.0"
+description = "sdfadf"
+authors = ["Adrian Likins <alikins@redhat.com>"]
+
+[tool.poetry.dependencies]
+python = "*"
+pulp-ansible = "^0.6.1"
+django-prometheus = "^2.1.0"
+
+[tool.poetry.dev-dependencies]
+pylint = "^2.6.0"
+flake8 = "^3.8.4"
+black = "^20.8b1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -6,6 +6,8 @@ services:
     build:
       context: "${COMPOSE_CONTEXT}"
       dockerfile: "dev/Dockerfile.base"
+      args:
+        VERSION_CONTRAINTS: "${VERSION_CONSTRAINTS}"
     image: "localhost/galaxy_ng/galaxy_ng:base"
     entrypoint: "/bin/true"
     tmpfs:
@@ -17,6 +19,8 @@ services:
     build:
       context: "${COMPOSE_CONTEXT}"
       dockerfile: "dev/${COMPOSE_PROFILE}/Dockerfile"
+      args:
+        VERSION_CONTRAINTS: "${VERSION_CONSTRAINTS}"
     image: "localhost/galaxy_ng/galaxy_ng:${COMPOSE_PROFILE}"
     command: ['run', 'api-reload']
     ports:
