@@ -41,14 +41,14 @@ ENV PATH="/venv/bin:${PATH}" \
 COPY ./requirements/requirements.common.txt /tmp/requirements.txt
 
 RUN set -ex; \
-    pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir --requirement /tmp/requirements.txt
+    pip install --cache-dir /pip_cache --upgrade pip \
+    && pip install --cache-dir /pip_cache --requirement /tmp/requirements.txt
 
 # Install application
 COPY . /app
 
 RUN set -ex; \
-    pip install --no-cache-dir --editable /app \
+    pip install  --cache-dir /pip_cache --editable /app \
     && PULP_CONTENT_ORIGIN=x django-admin collectstatic
 
 # Finalize installation

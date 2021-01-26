@@ -43,4 +43,11 @@ declare -xr DEV_SOURCE_PATH=${DEV_SOURCE_PATH:-galaxy_ng}
 declare -xr COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-galaxy_ng}"
 declare -xr COMPOSE_CONTEXT=".."
 
-exec docker-compose "${compose_args[@]}" "$@"
+declare -p DEV_SOURCE_PATH
+declare -p COMPOSE_PROFILE
+
+echo "DEV_SOURCE_PATH: ${DEV_SOURCE_PATH}"
+echo "COMPOSE_PROFILE: ${COMPOSE_PROFILE}"
+
+# exec docker-compose "${compose_args[@]}" "$@"
+docker-compose "${compose_args[@]}" "$@"
