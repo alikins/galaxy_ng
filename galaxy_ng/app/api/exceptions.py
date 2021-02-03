@@ -9,10 +9,10 @@ from rest_framework.settings import api_settings
 def _get_errors(detail, *, status, title, source=None, context=None):
     if isinstance(detail, list):
         for item in detail:
-            yield from _get_errors(item, status=status, title=title, source=source)
+            yield from _get_errors(item, status=status, title=title, source=source, context=context)
     elif isinstance(detail, dict):
         for key, value in detail.items():
-            yield from _get_errors(value, status=status, title=title, source=key)
+            yield from _get_errors(value, status=status, title=title, source=key, context=context)
     else:
         error = {
             'status': str(status),
