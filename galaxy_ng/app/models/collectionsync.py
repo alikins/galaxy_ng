@@ -1,3 +1,5 @@
+import logging
+
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -5,6 +7,8 @@ from pulpcore.plugin.models import Task
 from pulp_ansible.app.models import AnsibleRepository, Collection
 
 from .namespace import Namespace
+
+log = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=Collection)
@@ -20,6 +24,9 @@ def create_namespace_if_not_present(sender, instance, created, **kwargs):
     in galaxy_ng and therefore not created. This signal ensures the
     Namespace is created.
     """
+
+    log.debug('post_save ns handler sender=%s', sender)
+    log.debug('post_save ns handler instance=%s', instance)
 
     Namespace.objects.get_or_create(name=instance.namespace)
 
