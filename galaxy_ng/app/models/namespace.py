@@ -48,6 +48,12 @@ class NamespaceManager(models.Manager):
             create_inbound_repo(obj.name)
         return super().bulk_create(objs, **kwargs)
 
+    def get_or_create(self, *args, **kwargs):
+        ns, created = super().get_or_create(*args, **kwargs)
+        if created:
+            create_inbound_repo(kwargs['name'])
+        return ns, created
+
     def delete(self):
         delete_inbound_repo(self.name)
         return super().delete()
