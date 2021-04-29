@@ -1,7 +1,7 @@
 import logging
 
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from pulpcore.plugin.models import Task
 from pulp_ansible.app.models import AnsibleRepository, Collection
@@ -9,6 +9,13 @@ from pulp_ansible.app.models import AnsibleRepository, Collection
 from .namespace import Namespace
 
 log = logging.getLogger(__name__)
+
+
+@receiver(pre_save, sender=Collection)
+def log_collection_pre_save(sender, instance, raw, using, update_fields, **kwargs):
+    log.debug('Collection pre_save instance=%s', instance)
+    # log.debug('Collection pre_save update_fields=%s', update_fields)
+    # log.debug('Collection pre_save kwargs=%s', repr(kwargs))
 
 
 @receiver(post_save, sender=Collection)
@@ -25,10 +32,11 @@ def create_namespace_if_not_present(sender, instance, created, **kwargs):
     Namespace is created.
     """
 
-    log.debug('post_save ns handler sender=%s', sender)
+    # log.debug('post_save ns handler sender=%s', sender)
     log.debug('post_save ns handler instance=%s', instance)
 
-    Namespace.objects.get_or_create(name=instance.namespace)
+    ns = Namespace.objects.get_or_create(name=instance.namespace)
+    log.debug('post_save ns handler namespace=%s', ns)
 
 
 class CollectionSyncTask(models.Model):
