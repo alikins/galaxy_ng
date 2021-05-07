@@ -10,6 +10,8 @@ from django.http import HttpResponseRedirect, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
+from drf_spectacular.utils import extend_schema, extend_schema_view
+
 from rest_framework.response import Response
 from rest_framework.exceptions import APIException, NotFound
 
@@ -78,6 +80,7 @@ class UnpaginatedCollectionViewSet(api_base.LocalSettingsMixin,
     pagination_class = None
     permission_classes = [access_policy.CollectionAccessPolicy]
     serializer_class = CollectionSerializer
+    pulp_tag_name = "Galaxy: Collection"
 
 
 class CollectionViewSet(api_base.LocalSettingsMixin,
@@ -85,6 +88,11 @@ class CollectionViewSet(api_base.LocalSettingsMixin,
                         pulp_ansible_views.CollectionViewSet):
     permission_classes = [access_policy.CollectionAccessPolicy]
     serializer_class = CollectionSerializer
+    pulp_tag_name = "Galaxy: Collection"
+
+    @extend_schema(responses={200: CollectionSerializer})
+    def retrieve(self, request, *args, **kwargs):
+        return super(request, *args, **kwargs)
 
 
 class UnpaginatedCollectionVersionViewSet(api_base.LocalSettingsMixin,
@@ -93,6 +101,7 @@ class UnpaginatedCollectionVersionViewSet(api_base.LocalSettingsMixin,
     pagination_class = None
     serializer_class = UnpaginatedCollectionVersionSerializer
     permission_classes = [access_policy.CollectionAccessPolicy]
+    pulp_tag_name = "Galaxy: Collection"
 
 
 class CollectionVersionViewSet(api_base.LocalSettingsMixin,
@@ -101,16 +110,19 @@ class CollectionVersionViewSet(api_base.LocalSettingsMixin,
     serializer_class = CollectionVersionSerializer
     permission_classes = [access_policy.CollectionAccessPolicy]
     list_serializer_class = CollectionVersionListSerializer
+    pulp_tag_name = "Galaxy: Collection Version"
 
 
 class CollectionVersionDocsViewSet(api_base.LocalSettingsMixin,
                                    pulp_ansible_views.CollectionVersionDocsViewSet):
     permission_classes = [access_policy.CollectionAccessPolicy]
+    pulp_tag_name = "Galaxy: Collection Version"
 
 
 class CollectionImportViewSet(api_base.LocalSettingsMixin,
                               pulp_ansible_views.CollectionImportViewSet):
     permission_classes = [access_policy.CollectionAccessPolicy]
+    pulp_tag_name = "Galaxy: Collection Version Artifact Import"
 
 
 class CollectionUploadViewSet(api_base.LocalSettingsMixin,
@@ -118,6 +130,7 @@ class CollectionUploadViewSet(api_base.LocalSettingsMixin,
     permission_classes = [access_policy.CollectionAccessPolicy]
     parser_classes = [AnsibleGalaxy29MultiPartParser]
     serializer_class = CollectionUploadSerializer
+    pulp_tag_name = "Galaxy: Collection Version Artifact"
 
     def _dispatch_import_collection_task(self, temp_file_pk, repository=None, **kwargs):
         """Dispatch a pulp task started on upload of collection version."""
@@ -146,7 +159,7 @@ class CollectionUploadViewSet(api_base.LocalSettingsMixin,
     def _get_path(kwargs, filename_ns):
         """Use path from '/content/<path>/v3/' or
            if user does not specify distribution base path
-           then use an inbound distribution based on filename namespace.
+           the use an inbound distribution based on filename namespace.
         """
         path = kwargs['path']
         if kwargs.get('no_path_specified', None):
@@ -228,6 +241,7 @@ class CollectionUploadViewSet(api_base.LocalSettingsMixin,
 class CollectionArtifactDownloadView(api_base.APIView):
     permission_classes = [access_policy.CollectionAccessPolicy]
     action = 'retrieve'
+    pulp_tag_name = "Galaxy: Collection Version Artifact"
 
     def get(self, request, *args, **kwargs):
         metrics.collection_artifact_download_attempts.inc()
@@ -266,6 +280,7 @@ class CollectionArtifactDownloadView(api_base.APIView):
 
 class CollectionVersionMoveViewSet(api_base.ViewSet):
     permission_classes = [access_policy.CollectionAccessPolicy]
+    pulp_tag_name = "Galaxy: Collection Version"
 
     def move_content(self, request, *args, **kwargs):
         """Remove content from source repo and add to destination repo.

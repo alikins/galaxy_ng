@@ -4,12 +4,11 @@ from django.urls import include, path
 from galaxy_ng.app.api import urls as api_urls
 from galaxy_ng.app import customadmin as admin
 from galaxy_ng.ui import urls as ui_urls
-
-from drf_spectacular.views import (
-    SpectacularJSONAPIView,
-    SpectacularYAMLAPIView,
-    SpectacularRedocView,
-    SpectacularSwaggerView,
+from galaxy_ng.app.api.views import (
+    JSONAPIView,
+    YAMLAPIView,
+    RedocView,
+    SwaggerView,
 )
 
 API_PATH_PREFIX = settings.GALAXY_API_PATH_PREFIX.strip("/")
@@ -28,7 +27,7 @@ urlpatterns = [
 urlpatterns.append(
     path(
         f"{API_PATH_PREFIX}/v3/openapi.json",
-        SpectacularJSONAPIView.as_view(),
+        JSONAPIView.as_view(),
         name="schema",
     )
 )
@@ -36,7 +35,7 @@ urlpatterns.append(
 urlpatterns.append(
     path(
         f"{API_PATH_PREFIX}/v3/openapi.yaml",
-        SpectacularYAMLAPIView.as_view(),
+        YAMLAPIView.as_view(),
         name="schema-yaml",
     )
 )
@@ -44,7 +43,7 @@ urlpatterns.append(
 urlpatterns.append(
     path(
         f"{API_PATH_PREFIX}/v3/redoc/",
-        SpectacularRedocView.as_view(),
+        RedocView.as_view(),
         name="schema-redoc",
     )
 )
@@ -52,7 +51,7 @@ urlpatterns.append(
 urlpatterns.append(
     path(
         f"{API_PATH_PREFIX}/v3/swagger-ui/",
-        SpectacularSwaggerView.as_view(url_name='schema'),
-        name='swagger-ui',
+        SwaggerView.as_view(url_name='schema', pulp_tag_name="Galaxy: API"),
+        name='schema-swagger-ui',
     )
 )

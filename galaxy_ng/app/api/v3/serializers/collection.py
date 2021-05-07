@@ -1,11 +1,20 @@
 import logging
 import mimetypes
-
+from typing import Any, Dict
 from django.conf import settings
+
+from drf_spectacular.utils import (
+    # extend_schema,
+    extend_schema_field,
+    # extend_schema_view,
+    # extend_schema_serializer,
+)
+from drf_spectacular.types import OpenApiTypes
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, _get_error_details
 from rest_framework.reverse import reverse
+
 
 from galaxy_ng.app.api.ui.serializers.base import Serializer
 from galaxy_ng.app.api.utils import parse_collection_filename
@@ -44,13 +53,18 @@ class CollectionSerializer(_CollectionSerializer, HrefNamespaceMixin):
     class Meta(_CollectionSerializer.Meta):
         ref_name = "CollectionWithFixedHrefsSerializer"
 
+    @extend_schema_field(OpenApiTypes.URI)
     def get_href(self, obj):
         return self._get_href("collections-detail", namespace=obj.namespace, name=obj.name)
 
+    @extend_schema_field(OpenApiTypes.URI)
     def get_versions_url(self, obj):
         """Get a link to a collection versions list."""
         return self._get_href("collection-versions-list", namespace=obj.namespace, name=obj.name)
 
+    @extend_schema_field(Dict[str, Any])
+    # @extend_schema_field(Dict['href': OpenApiTypes.URI,
+    #                          'version': str])
     def get_highest_version(self, obj):
         """Get a highest version and its link."""
         data = super().get_highest_version(obj)
@@ -65,6 +79,7 @@ class CollectionRefSerializer(_CollectionRefSerializer, HrefNamespaceMixin):
     class Meta:
         ref_name = "CollectionWithFixedHrefsRefSerializer"
 
+    @extend_schema_field(OpenApiTypes.URI)
     def get_href(self, obj):
         """Returns link to a collection."""
         return self._get_href("collections-detail", namespace=obj.namespace, name=obj.name)
@@ -74,6 +89,7 @@ class CollectionVersionListSerializer(_CollectionVersionListSerializer, HrefName
     class Meta(_CollectionVersionListSerializer.Meta):
         ref_name = "CollectionVersionWithFixedHrefsRefListSerializer"
 
+    @extend_schema_field(OpenApiTypes.URI)
     def get_href(self, obj):
         """Get href."""
         return self._get_href(
@@ -90,6 +106,7 @@ class UnpaginatedCollectionVersionSerializer(_UnpaginatedCollectionVersionSerial
     class Meta(_UnpaginatedCollectionVersionSerializer.Meta):
         ref_name = "UnpaginatedCollectionVersionWithFixedHrefsSerializer"
 
+    @extend_schema_field(OpenApiTypes.URI)
     def get_href(self, obj):
         return self._get_href("collections-detail", namespace=obj.namespace, name=obj.name)
 
@@ -101,6 +118,7 @@ class CollectionVersionSerializer(_CollectionVersionSerializer, HrefNamespaceMix
     class Meta(_CollectionVersionSerializer.Meta):
         ref_name = "CollectionVersionWithDownloadUrlSerializer"
 
+    @extend_schema_field(OpenApiTypes.URI)
     def get_download_url(self, obj):
         """
         Get artifact download URL.
@@ -111,6 +129,7 @@ class CollectionVersionSerializer(_CollectionVersionSerializer, HrefNamespaceMix
         distro_base_path = self.context["path"]
         return f"{host}/{prefix}/v3/artifacts/collections/{distro_base_path}/{obj.relative_path}"
 
+    @extend_schema_field(OpenApiTypes.URI)
     def get_href(self, obj):
         return self._get_href(
             "collection-versions-detail",
