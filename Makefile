@@ -3,6 +3,20 @@ DOCKER_IMAGE_NAME = localhost/galaxy_ng/galaxy_ng
 # just pulp-container, other this defaults to updating everything.
 PIP_COMPILE_UPDATE_SPEC ?= -U
 
+requirements.%.in: FORCE
+
+# windres $^ -O coff -o $@
+requirements.%.txt: requirements.%.in
+	ANSIBLE_SKIP_CONFLICT_CHECK=1 pip-compile --build-isolation $(PIP_COMPILE_UPDATE_SPEC) -o $@ \
+		setup.py $^
+
+REQUIREMENTS_TXT := $(wildcard requirements/requirements.*.txt) $(MAKEFILE)
+
+reqs: $(REQUIREMENTS_TXT)
+
+.PHONY: FORCE
+FORCE:
+
 .PHONY: help
 help:             ## Show the help.
 	@echo "Usage: make <target>"
