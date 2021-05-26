@@ -1,0 +1,310 @@
+---
+version: 1
+disable_existing_loggers: false
+# disable_existing_loggers: true
+dynaconf_merge: true
+filters:
+  require_debug_true:
+    (): django.utils.log.RequireDebugTrue
+  sql_excludes:
+    (): alogging.filters.django_sql_excludes.DjangoDbSqlExcludeFilter
+    excludes:
+      - core_contentappstatus
+      - last_heartbeat
+  slow_sql_only:
+    (): alogging.filters.django_sql_slow_queries.DjangoDbSqlSlowQueriesFilter
+    min_duration: 0.1
+  default_fields:
+    (): alogging.filters.default_fields.DefaultFieldsFilter
+    defaults:
+      request:
+        user: ""
+        session:
+          _session: {}
+        path: ""
+      status_code: ""
+      requestid: ""
+  exclude:
+    (): alogging.filters.exclude.ExcludeFilter
+    excludes:
+      - ['name', 'asyncio']
+      - ['module', 'base_events']
+      - ['funcName', '_run_once']
+    operator: "ALL"
+  process_context:
+    (): alogging.filters.process_context.ProcessContextLoggingFilter
+      # pprint_args:
+  # (): alogging.filters.pprint.PprintArgsFilter
+  #  correlation:
+    #  (): cid.log.CidContextFilter
+formatters:
+  simple:
+    format: "{levelname} {message}"
+    style: "{"
+
+  verbose:
+    format:
+      "{levelname} {asctime} {status_code} user={request.user} session={request.session._session} {request.path} {name} {module}:{funcName}:{lineno:d} {process:d}
+      {thread:d} {message}"
+    style: "{"
+
+  verbose_asyncio:
+    format:
+      "{asctime} {name} {module}:{funcName}:{lineno:d} pid:{process:d} - {message}"
+    style: "{"
+
+  color:
+    '()': color_bucket_logger.ColorFormatter
+    #    format:
+    #      "{levelname} {asctime} {status_code} user={request.user} {name} {module}.{funcName}:{lineno:d} {process:5}
+    #      {thread:d} {message}"
+    format:
+      "{levelname} {asctime} {name} {module}.{funcName}:{lineno:d} {process:5} - {message}"
+    style: "{"
+    auto_color: true
+    color_groups:
+      - ['name', ['name', 'default', 'funcName', 'lineno', 'module']]
+      - ['process', ['process', 'processName']]
+      - ['thread', ['thread', 'threadName']]
+      - ['levelname', ['levelname']]
+
+  sql_verbose:
+    format:
+      "{levelname} {asctime} {name} {module}:{funcName}:{lineno:d} {process:d} {thread:d} {message}\n## BEGIN ##\n{sql}\n## PARAMS ##\n{params}\n## END ##'"
+    style: "{"
+
+  sql_color_formatted:
+    '()': alogging.formatters.django_sql_color.DjangoDbSqlColorFormatter
+    format:
+      "{levelname} {asctime} {name} {module}:{funcName}:{lineno:d} {process:d} {duration} {thread:d} {message}\n## BEGIN ##\n{sql}\n## PARAMS ##\n{params}\n## END ##'"
+    style: "{"
+    options:
+      reindent: true
+      # reindent_aligned: true
+      keyword_case: 'upper'
+      # indent_columns: true
+      # pygments_formatter_style_name: 'solarized-dark'
+      pygments_style: 'colorful'
+      pygments_formatter: 'terminal256'
+      pygments_lexer: 'postgres'
+
+  sql_formatted:
+    '()': alogging.formatters.django_sql.DjangoDbSqlFormatter
+    format:
+      "{levelname} {asctime} {name} {module}:{funcName}:{lineno:d} {process:d} {thread:d} {message}\n## BEGIN ##\n{sql}\n## PARAMS ##\n{params}\n## END ##'"
+    style: "{"
+    options:
+      reindent: true
+      # reindent_aligned: true
+      keyword_case: 'upper'
+      # indent_columns: true
+      #
+  pprint_record:
+    '()': alogging.formatters.pprint.PPrintRecordFormatter
+    style: "{"
+    format:
+      "{levelname} {asctime} {name} {module}.{funcName}:{lineno:d} {process:5} {thread:d}"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    # formatter: verbose
+    formatter: color
+    # formatter: pprint_record
+    level: DEBUG
+    filters:
+      - default_fields
+      - exclude
+        # - pprint_args
+  access_console:
+    class: logging.StreamHandler
+    formatter: verbose
+      # formatter: color
+    level: DEBUG
+    filters:
+      - default_fields
+        # - pprint_args
+  sql_console:
+    class: logging.StreamHandler
+    formatter: sql_color_formatted
+    filters:
+      - sql_excludes
+      - slow_sql_only
+        # level: DEBUG
+    level: DEBUG
+  collection_import:
+    class: pulp_ansible.app.logutils.CollectionImportHandler
+    level: DEBUG
+    formatter: simple
+  #  "/home/adrian/src:/src:z"
+  # galaxy_ng_file:
+  #   class: logging.handlers.WatchedFileHandler
+  #   filename: "/src/galaxy_ng/logs/galaxy_ng.log"
+  #   level: DEBUG
+  #   formatter: verbose_asyncio
+  #   filters:
+  #     - process_context
+  #     - default_fields
+  #     - exclude
+  # galaxy_ng_task_file:
+  #   class: logging.handlers.WatchedFileHandler
+  #   filename: "/src/galaxy_ng/logs/galaxy_ng_task.log"
+  #   level: DEBUG
+  #   formatter: verbose_asyncio
+  #   filters:
+  #     - process_context
+  #     - default_fields
+  #     - exclude
+  # galaxy_ng_db_file:
+  #   class: logging.handlers.WatchedFileHandler
+  #   filename: "/src/galaxy_ng/logs/galaxy_ng_db.log"
+  #   level: DEBUG
+  #   formatter: verbose_asyncio
+  #   filters:
+  #     - process_context
+  #     - default_fields
+  #     - exclude
+
+loggers:
+  "":
+    handlers:
+      - console
+    level: DEBUG
+  django:
+    level: DEBUG
+    # propagate: true
+  django.server:
+    level: DEBUG
+    propagate: true
+    handlers:
+      - console
+        # - access_console
+  django.db:
+    handlers:
+      # - galaxy_ng_db_file
+      - sql_console
+        # level: DEBUG
+    level: DEBUG
+    propagate: false
+  django.request:
+    # handlers:
+      # - access_console
+      #  - console
+    # level: INFO
+    level: DEBUG
+      # propagate: false
+  django.security:
+    level: DEBUG
+    propagate: true
+  django.security.csrf:
+    level: DEBUG
+    propagate: true
+    # something about the way the django/drf/pulp/gng do
+  # url resolving makes any 404 dump about 20 stack traces
+  # if django.template is DEBUG
+  django.template:
+    level: INFO
+  django.utils.autoreload:
+    # level: ERROR
+    level: INFO
+  dynaconf:
+    # handlers:
+    #  - console
+    level: DEBUG
+  galaxy_ng:
+    level: DEBUG
+  galaxy_ng.auth:
+    level: DEBUG
+  galaxy_ng.app.access_control:
+    level: DEBUG
+  galaxy_pulp:
+    level: DEBUG
+  pulpcore:
+    # handlers:
+    #  - console
+    level: DEBUG
+  pulpcore.content:
+    level: INFO
+    # level: DEBUG
+  pulpcore.tasking.services.worker_watcher:
+    level: INFO
+  pulpcore.tasking.worker_watcher:
+    level: INFO
+  "pulpcore.tasking.tasks:queue:":
+    level: INFO
+    handlers:
+      - console
+      # - galaxy_ng_task_file
+      # - galaxy_ng_file
+    propagate: false
+  pulpcore.plugin.stages:
+    level: INFO
+    handlers:
+      - console
+      # - galaxy_ng_file
+    propagate: false
+  pulp_ansible:
+    level: DEBUG
+  pulp_ansible.app.tasks.collection.import_collection:
+    level: INFO
+    handlers:
+      - collection_import
+    propagate: false
+  pulp_ansible.app.tasks.utils:
+    level: WARNING
+  requests:
+    # requests sets a NullHandler by default
+    handlers:
+      - console
+    level: DEBUG
+  automated_logging:
+    # level: INFO
+    level: DEBUG
+  rq:
+    level: DEBUG
+  urllib3:
+    handlers:
+      - console
+    level: DEBUG
+  # drf_yasg: {}
+  django_filters:
+    level: DEBUG
+  import_export:
+    level: INFO
+  import_export.resources:
+    level: INFO
+  gnupg:
+    handlers:
+      - console
+  gunicorn:
+    handlers:
+      - console
+    # level: INFO
+    level: DEBUG
+    # propagate: true
+  gunicorn.access:
+    handlers:
+      - console
+    level: DEBUG
+    # level: INFO
+    # propagate: true
+  gunicorn.error:
+    handlers:
+      - console
+    level: INFO
+    # propagate: true
+  # stuff not useful for DEBUG
+  MARKDOWN:
+    level: INFO
+  aiohttp:
+    level: INFO
+  asyncio:
+    handlers:
+      - console
+      # - galaxy_ng_file
+    level: INFO
+    # level: DEBUG
+    propagate: false
+  # Used by django_extensions shell_plus with ptpython
+  parso:
+    level: INFO

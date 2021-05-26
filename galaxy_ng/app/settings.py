@@ -1,3 +1,8 @@
+from galaxy_ng.app import settings_logging
+
+LOGGING = settings_logging.LOGGING
+
+
 MIDDLEWARE = [
     'django_prometheus.middleware.PrometheusBeforeMiddleware',
     # BEGIN: Pulp standard middleware
