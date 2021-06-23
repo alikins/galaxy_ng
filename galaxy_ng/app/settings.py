@@ -1,5 +1,6 @@
 MIDDLEWARE = [
     'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'automated_logging.middleware.AutomatedLoggingMiddleware',
     # BEGIN: Pulp standard middleware
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -17,6 +18,7 @@ MIDDLEWARE = [
 INSTALLED_APPS = [
     'rest_framework.authtoken',
     'dynaconf_merge',
+    'automated_logging',
 ]
 
 
@@ -107,3 +109,51 @@ SPECTACULAR_SETTINGS = {
 # Disable django guardian anonymous user
 # https://django-guardian.readthedocs.io/en/stable/configuration.html#anonymous-user-name
 ANONYMOUS_USER_NAME = None
+
+AUTOMATED_LOGGING = {
+    "globals": {
+        "exclude": {
+            "applications": [
+                "plain:contenttypes",
+                "plain:admin",
+                "plain:basehttp",
+                "glob:session*",
+                "plain:migrations",
+            ]
+        }
+    },
+    "model": {
+        "detailed_message": True,
+        "exclude": {"applications": [], "fields": [], "models": [], "unknown": False},
+        "loglevel": 20,
+        "mask": [],
+        "max_age": None,
+        "performance": False,
+        "snapshot": False,
+        "user_mirror": False,
+    },
+    "modules": ["request", "unspecified", "model"],
+    "request": {
+        "data": {
+            "content_types": ["application/json"],
+            "enabled": [],
+            "ignore": [],
+            "mask": ["password"],
+            "query": False,
+        },
+        "exclude": {
+            "applications": [],
+            "methods": ["GET"],
+            "status": [200],
+            "unknown": False,
+        },
+        "ip": True,
+        "loglevel": 20,
+        "max_age": None,
+    },
+    "unspecified": {
+        "exclude": {"applications": [], "files": [], "unknown": False},
+        "loglevel": 20,
+        "max_age": None,
+    },
+}
