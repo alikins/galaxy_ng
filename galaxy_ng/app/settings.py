@@ -1,3 +1,8 @@
+from galaxy_ng.app import settings_logging
+
+LOGGING = settings_logging.LOGGING
+
+
 MIDDLEWARE = [
     'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'automated_logging.middleware.AutomatedLoggingMiddleware',
@@ -119,6 +124,8 @@ AUTOMATED_LOGGING = {
                 "plain:basehttp",
                 "glob:session*",
                 "plain:migrations",
+                # pulpcore
+                "core.ProgressReport",
             ]
         }
     },
