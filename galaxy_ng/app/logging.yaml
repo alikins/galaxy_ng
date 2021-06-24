@@ -1,0 +1,202 @@
+---
+version: 1
+disable_existing_loggers: false
+# disable_existing_loggers: true
+dynaconf_merge: true
+filters:
+  require_debug_true:
+    (): django.utils.log.RequireDebugTrue
+formatters:
+  simple:
+    format: "{levelname} {message}"
+    style: "{"
+
+  verbose:
+    format:
+      "{levelname} {asctime} {name} {module}.{funcName}:{lineno:d} {process:5} - {message}"
+    style: "{"
+
+  verbose_django:
+    format:
+      "{levelname} {asctime} {status_code} user={request.user} session={request.session._session} {request.path} {name} {module}:{funcName}:{lineno:d} {process:d}
+      {thread:d} {message}"
+    style: "{"
+
+  verbose_medium:
+    format:
+      "{asctime} {name} {module}:{funcName}:{lineno:d} pid:{process:d} - {message}"
+    style: "{"
+
+  sql_verbose:
+    format:
+      "{levelname} {asctime} {name} {module}:{funcName}:{lineno:d} {process:d} {thread:d} {message}\n## BEGIN ##\n{sql}\n## PARAMS ##\n{params}\n## END ##'"
+    style: "{"
+
+  logstash:
+    '()': logstash_formatter.LogstashFormatterV1
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: verbose
+    level: DEBUG
+  access_console:
+    class: logging.StreamHandler
+    formatter: verbose
+    level: DEBUG
+  collection_import:
+    class: pulp_ansible.app.logutils.CollectionImportHandler
+    level: DEBUG
+    formatter: simple
+  automated_logging_file:
+    class: logging.handlers.WatchedFileHandler
+    filename: "/src/galaxy_ng/logs/galaxy_automated_logging.log"
+    level: DEBUG
+    formatter: verbose_medium
+    filters:
+      - process_context
+      - default_fields
+      - exclude
+  automated_logging_json_file:
+    class: logging.handlers.WatchedFileHandler
+    filename: "/src/galaxy_ng/logs/galaxy_automated_logging_json.log"
+    level: DEBUG
+    formatter: logstash
+    filters:
+      - default_fields
+      - exclude
+
+loggers:
+  "":
+    handlers:
+      - console
+    level: DEBUG
+  automated_logging:
+    # automated_logging loggers add some log record attributes
+    # 'action' - 'model', 'request', or 'unspecified'
+    # 'data' - a dict of:
+    #   'instance': the instance changed for model action
+    #   'status': what kind of op was performed
+    #   (Operation.MODIFY,
+    #   Operation.CREATE, etc)
+    # # NOTE: 'data' is only set on records for action==model
+    # 'event' - instance of ModelEvent, RequestEvent...
+    # 'modifications' - a list of ModelValueModifications
+    # 'relationships' - list of m2m relationships involved
+    #
+    # level: INFO
+    level: DEBUG
+    handlers:
+      - console
+      - automated_logging_file
+      - automated_logging_json_file
+  django:
+    level: DEBUG
+  django.server:
+    level: DEBUG
+    propagate: true
+    handlers:
+      - console
+  django.db:
+    handlers:
+      - sql_console
+    level: DEBUG
+    propagate: false
+  django.request:
+    # handlers:
+      # - access_console
+      #  - console
+    level: DEBUG
+  django.security:
+    level: DEBUG
+    propagate: true
+  django.security.csrf:
+    level: DEBUG
+    propagate: true
+  # something about the way the django/drf/pulp/gng do
+  # url resolving makes any 404 dump about 20 stack traces
+  # if django.template is DEBUG
+  django.template:
+    level: INFO
+  django.utils.autoreload:
+    level: INFO
+  dynaconf:
+    level: DEBUG
+  galaxy_ng:
+    level: DEBUG
+  galaxy_ng.auth:
+    level: DEBUG
+  galaxy_ng.app.access_control:
+    level: DEBUG
+  galaxy_pulp:
+    level: DEBUG
+  pulpcore:
+    level: DEBUG
+  pulpcore.content:
+    level: INFO
+  pulpcore.tasking.services.worker_watcher:
+    level: INFO
+  pulpcore.tasking.worker_watcher:
+    level: INFO
+  "pulpcore.tasking.tasks:queue:":
+    level: INFO
+    propagate: false
+  pulpcore.plugin.stages:
+    level: INFO
+    handlers:
+      - console
+    propagate: false
+  pulp_ansible:
+    level: DEBUG
+  pulp_ansible.app.tasks.collection.import_collection:
+    level: INFO
+    handlers:
+      - collection_import
+    propagate: false
+  pulp_ansible.app.tasks.utils:
+    level: WARNING
+  requests:
+    # requests sets a NullHandler by default
+    handlers:
+      - console
+    level: DEBUG
+  rq:
+    level: DEBUG
+  urllib3:
+    handlers:
+      - console
+    level: DEBUG
+  django_filters:
+    level: DEBUG
+  import_export:
+    level: INFO
+  import_export.resources:
+    level: INFO
+  gnupg:
+    handlers:
+      - console
+  gunicorn:
+    handlers:
+      - console
+    level: INFO
+  gunicorn.access:
+    handlers:
+      - console
+    level: INFO
+  gunicorn.error:
+    handlers:
+      - console
+    level: INFO
+  # stuff not useful for DEBUG
+  MARKDOWN:
+    level: INFO
+  aiohttp:
+    level: INFO
+  asyncio:
+    handlers:
+      - console
+    level: INFO
+    propagate: false
+  # Used by django_extensions shell_plus with ptpython
+  parso:
+    level: INFO
