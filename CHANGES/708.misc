@@ -1,0 +1,15 @@
+Use/set 'enabled_revisions' to 1 for AnsibleRepositories.
+
+Before collection artifacts can be removed, all repository versions that the
+collection is in must be removed. This means removing the entire repository
+history for every repo that has every contained a specific collection version.
+
+To make this step of the deletion process faster, we will ensure that all
+ansible repositories only retain the latest version by setting
+retained_versions=1.
+
+- Create a migration to retained_versions=1 on all existing ansible repositories.
+
+- Enforce that all new ansible repositories have retained_versions=1 using a post
+create signal.
+  - Update creation of AnsibleRepositories to set retained_versions=1 if possible
